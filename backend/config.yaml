@@ -1,0 +1,15 @@
+server:
+  port: "8080"
+  mode: "debug"  # debug 或 release
+
+mongodb:
+  uri: "mongodb://192.168.31.12:27017"
+  database: "imsystem"
+
+jwt:
+  secret: "your-secret-key-here"  # 请在生产环境中修改为更安全的密钥
+  expiresIn: 24  # token过期时间（小时）
+
+ai:
+  apiKey: "your-gemini-api-key"  # Gemini API密钥
+  model: "gemini-pro"  # AI模型名称
