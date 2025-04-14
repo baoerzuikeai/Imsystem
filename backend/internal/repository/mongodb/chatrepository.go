@@ -1,0 +1,91 @@
+package mongodb
+
+import (
+	"context"
+
+	"github.com/baoerzuikeai/Imsystem/internal/domain"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+type chatRepository struct {
+	collection *mongo.Collection
+	userColl   *mongo.Collection
+}
+
+// NewChatRepository 创建一个新的 ChatRepository 实例
+func NewChatRepository(db *mongo.Database) *chatRepository {
+	return &chatRepository{
+		collection: db.Collection("chats"),
+		userColl:   db.Collection("users"),
+	}
+}
+
+// GetChatMembers 根据 ChatID 获取聊天成员
+func (r *chatRepository) GetChatMembers(ctx context.Context, chatID string) ([]*domain.User, error) {
+	// 将字符串 chatID 转换为 ObjectId
+	chatObjectID, err := primitive.ObjectIDFromHex(chatID)
+	if err != nil {
+		return nil, err // 如果转换失败，返回错误
+	}
+
+	// 查询 Chat 文档，获取成员列表
+	var chat domain.Chat
+	err = r.collection.FindOne(ctx, bson.M{"_id": chatObjectID}).Decode(&chat)
+	if err != nil {
+		return nil, err
+	}
+
+	// 遍历成员列表，查询每个成员的详细信息
+	var users []*domain.User
+	for _, member := range chat.Members {
+		// 将成员的 userId 转换为 ObjectId
+		userObjectID, err := primitive.ObjectIDFromHex(member.UserID)
+		if err != nil {
+			continue // 如果转换失败，跳过该成员
+		}
+
+		// 查询用户信息
+		var user domain.User
+		err = r.userColl.FindOne(ctx, bson.M{"_id": userObjectID}).Decode(&user)
+		if err != nil {
+			continue // 如果查询失败，跳过该成员
+		}
+
+		users = append(users, &user)
+	}
+
+	return users, nil
+}
+
+// GetChatByID 根据 ChatID 获取聊天详情
+func (r *chatRepository) GetChatByID(ctx context.Context, chatID string) (*domain.Chat, error) {
+	var chat domain.Chat
+	err := r.collection.FindOne(ctx, bson.M{"_id": chatID}).Decode(&chat)
+	if err != nil {
+		return nil, err
+	}
+	return &chat, nil
+}
+
+// CreateChat 创建新的聊天
+func (r *chatRepository) CreateChat(ctx context.Context, chat *domain.Chat) error {
+	_, err := r.collection.InsertOne(ctx, chat)
+	return err
+}
+
+// UpdateChat 更新聊天信息
+func (r *chatRepository) UpdateChat(ctx context.Context, chat *domain.Chat) error {
+	filter := bson.M{"_id": chat.ID}
+	update := bson.M{"$set": chat}
+	_, err := r.collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+	return err
+}
+
+// DeleteChat 删除聊天
+func (r *chatRepository) DeleteChat(ctx context.Context, chatID string) error {
+	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": chatID})
+	return err
+}

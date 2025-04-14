@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"time"
@@ -47,7 +48,7 @@ func (c *Client) ReadPump() {
 			continue
 		}
 
-		// 处理消息
+		// 保存消息到数据库
 		msg := &domain.Message{
 			ID:        primitive.NewObjectID(),
 			ChatID:    wsMessage.ChatID,
@@ -71,15 +72,14 @@ func (c *Client) ReadPump() {
 			msg.Content.FileName = wsMessage.FileName
 		}
 
-		// 保存消息到数据库
-		// if err := c.Manager.messageService.Create(context.Background(), msg); err != nil {
-		// 	log.Printf("error saving message: %v", err)
-		// 	continue
-		// }
+		if err := c.Manager.messageService.Create(context.Background(), msg); err != nil {
+			log.Printf("error saving message: %v", err)
+			continue
+		}
 
 		// 广播消息
 		messageJSON, _ := json.Marshal(msg)
-		c.Manager.Broadcast(messageJSON)
+		c.Manager.Broadcast(wsMessage.ChatID, messageJSON)
 	}
 }
 
