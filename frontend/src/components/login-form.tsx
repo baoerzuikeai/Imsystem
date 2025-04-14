@@ -19,15 +19,15 @@ export function LoginForm({
     e.preventDefault() // Prevent default form submission
 
     try {
-    const response = await axios.post("http://localhost:8080/api/v1/auth/login", { // Replace with your API endpoint
-      email: email,
-      password: password,
-    })
+      const response = await axios.post("http://localhost:8080/api/v1/auth/login", { // Replace with your API endpoint
+        email: email,
+        password: password,
+      })
 
       // Handle successful login
       console.log("Login successful:", response.data)
       // Store the token in local storage or a cookie
-      localStorage.setItem("token", response.data.token) // Example: Store token
+      localStorage.setItem("token", "Bearer " + response.data.token) // Example: Store token
       // Redirect to a different page (e.g., the chat page)
       navigate('/chat'); // Redirect to the chat page
 
