@@ -93,3 +93,11 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 
 	return user, token, nil
 }
+
+func (s *AuthService) GetUserByID(ctx context.Context, userID string) (*domain.User, error) {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

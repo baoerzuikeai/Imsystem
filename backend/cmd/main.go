@@ -56,7 +56,7 @@ func main() {
 
 	//配置 CORS
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173"} // 允许来自前端的请求
+	config.AllowAllOrigins = true
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	config.AllowCredentials = true
@@ -73,6 +73,7 @@ func main() {
 	protected := r.Group("/api/v1")
 	protected.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
 	{
+		protected.GET("/auth/user", authHandler.GetUserDetail)
 		protected.GET("/ws", wsHandler.HandleWebSocket)
 		protected.GET("/chats/:chatId/messages", messageHandler.GetChatMessages)
 	}

@@ -1,9 +1,14 @@
-export default function ChatPage() {
-    return (
-        <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-            <div className="w-full max-w-sm md:max-w-3xl">
-                <h1>Chat Page</h1>
-            </div>
-        </div>
-    )
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="">
+        <SidebarTrigger />
+        {children}
+      </main>
+    </SidebarProvider>
+  )
 }

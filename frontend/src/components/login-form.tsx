@@ -19,7 +19,7 @@ export function LoginForm({
     e.preventDefault() // Prevent default form submission
 
     try {
-      const response = await axios.post("http://localhost:8080/api/v1/auth/login", { // Replace with your API endpoint
+      const response = await axios.post("http://192.168.31.75:8080/api/v1/auth/login", { // Replace with your API endpoint
         email: email,
         password: password,
       })
@@ -40,7 +40,7 @@ export function LoginForm({
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-6 ", className)} {...props}>
       <Card className="overflow-hidden">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8" onSubmit={handleSubmit}> {/* Add onSubmit handler */}
@@ -91,7 +91,7 @@ export function LoginForm({
 
               <div className="text-center text-sm">
                 Don&apos;t have an account?{" "}
-                <a href="#" className="underline underline-offset-4">
+                <a href="/register" className="underline underline-offset-4">
                   Sign up
                 </a>
               </div>
@@ -100,7 +100,7 @@ export function LoginForm({
           <div className="relative hidden bg-muted md:block">
             <img
               src="../public/chat.svg"
-              className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+              className="absolute inset-0 h-full w-full object-fill dark:brightness-[0.2] dark:grayscale"
             />
           </div>
         </CardContent>
