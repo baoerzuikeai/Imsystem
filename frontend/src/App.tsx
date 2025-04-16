@@ -3,7 +3,6 @@ import RegisterPage from './pages/Register'; // 导入 RegisterPage
 import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './router/PrivateRoute';
 import ChatPage from './pages/Chat';
-import Layout from './pages/layout';
 
 
 function App() {
