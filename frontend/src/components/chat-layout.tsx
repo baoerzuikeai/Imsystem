@@ -8,6 +8,8 @@ import { ContactsSidebar } from "@/components/contacts-sidebar"
 import { ContactDetails } from "@/components/contact-details"
 import { SettingsSidebar } from "@/components/settings-sidebar"
 import { SearchSidebar } from "@/components/search-sidebar"
+import { GroupInfo } from "@/components/group-info"
+import { CreateGroup } from "@/components/create-group"
 import { useMobile } from "@/hooks/use-mobile"
 import type { Chat, Message, User } from "@/types"
 import { mockChats, mockUsers } from "@/data/mock-data"
@@ -20,6 +22,8 @@ export function ChatLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const [activeSection, setActiveSection] = useState("chats")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [showGroupInfo, setShowGroupInfo] = useState(false)
+  const [showCreateGroup, setShowCreateGroup] = useState(false)
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -45,8 +49,35 @@ export function ChatLayout() {
     }
 
     setChats(chats.map((chat) => (chat.id === activeChat.id ? updatedChat : chat)))
-
     setActiveChat(updatedChat)
+  }
+
+  const handleCreateGroup = (name: string, participants: string[]) => {
+    const newGroupId = `group-${Date.now()}`
+    const newGroup: Chat = {
+      id: newGroupId,
+      type: "group",
+      groupName: name,
+      participants: participants,
+      messages: [],
+      unreadCount: 0,
+      createdBy: "current-user",
+      lastMessageTime: new Date(),
+    }
+
+    setChats([newGroup, ...chats])
+    setActiveChat(newGroup)
+    setShowCreateGroup(false)
+  }
+
+  const toggleGroupInfo = () => {
+    if (activeChat?.type === "group") {
+      setShowGroupInfo(!showGroupInfo)
+    }
+  }
+
+  const toggleCreateGroup = () => {
+    setShowCreateGroup(!showCreateGroup)
   }
 
   const renderContent = () => {
@@ -61,8 +92,21 @@ export function ChatLayout() {
               isOpen={sidebarOpen}
               toggleSidebar={toggleSidebar}
               users={users}
+              onCreateGroup={toggleCreateGroup}
             />
-            <ChatMain chat={activeChat} onSendMessage={handleSendMessage} toggleSidebar={toggleSidebar} users={users} />
+            <ChatMain
+              chat={activeChat}
+              onSendMessage={handleSendMessage}
+              toggleSidebar={toggleSidebar}
+              users={users}
+              onGroupInfoClick={toggleGroupInfo}
+            />
+            {showGroupInfo && activeChat?.type === "group" && (
+              <GroupInfo chat={activeChat} users={users} onClose={() => setShowGroupInfo(false)} />
+            )}
+            {showCreateGroup && (
+              <CreateGroup users={users} onClose={() => setShowCreateGroup(false)} onCreateGroup={handleCreateGroup} />
+            )}
           </>
         )
       case "contacts":
@@ -91,8 +135,15 @@ export function ChatLayout() {
               isOpen={sidebarOpen}
               toggleSidebar={toggleSidebar}
               users={users}
+              onCreateGroup={toggleCreateGroup}
             />
-            <ChatMain chat={activeChat} onSendMessage={handleSendMessage} toggleSidebar={toggleSidebar} users={users} />
+            <ChatMain
+              chat={activeChat}
+              onSendMessage={handleSendMessage}
+              toggleSidebar={toggleSidebar}
+              users={users}
+              onGroupInfoClick={toggleGroupInfo}
+            />
           </>
         )
     }

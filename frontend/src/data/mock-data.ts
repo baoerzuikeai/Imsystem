@@ -66,6 +66,7 @@ export const mockUsers: User[] = [
 export const mockChats: Chat[] = [
   {
     id: "chat-1",
+    type: "individual",
     participantId: "user-1",
     messages: [
       {
@@ -127,6 +128,7 @@ export const mockChats: Chat[] = [
   },
   {
     id: "chat-2",
+    type: "individual",
     participantId: "user-2",
     messages: [
       {
@@ -156,8 +158,94 @@ export const mockChats: Chat[] = [
     lastMessageStatus: "read",
     unreadCount: 2,
   },
+  // 添加群聊示例
+  {
+    id: "group-1",
+    type: "group",
+    participants: ["user-1", "user-2", "user-3", "current-user"],
+    groupName: "Project Team",
+    groupAvatar: "/placeholder.svg?height=40&width=40",
+    messages: [
+      {
+        id: "grp-msg-1",
+        content: "Hey team, let's discuss the upcoming deadline.",
+        senderId: "user-1",
+        timestamp: new Date(Date.now() - 172800000),
+        status: "read",
+      },
+      {
+        id: "grp-msg-2",
+        content: "I think we should prioritize the frontend tasks first.",
+        senderId: "user-2",
+        timestamp: new Date(Date.now() - 169200000),
+        status: "read",
+      },
+      {
+        id: "grp-msg-3",
+        content: "Agreed. I can help with the UI components.",
+        senderId: "current-user",
+        timestamp: new Date(Date.now() - 165600000),
+        status: "read",
+      },
+      {
+        id: "grp-msg-4",
+        content: "Great! I'll focus on the backend integration then.",
+        senderId: "user-3",
+        timestamp: new Date(Date.now() - 162000000),
+        status: "read",
+      },
+    ],
+    lastMessage: "Great! I'll focus on the backend integration then.",
+    lastMessageTime: new Date(Date.now() - 162000000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+    createdBy: "user-1",
+  },
+  {
+    id: "group-2",
+    type: "group",
+    participants: ["user-4", "user-5", "user-6", "current-user"],
+    groupName: "Weekend Hangout",
+    groupAvatar: "/placeholder.svg?height=40&width=40",
+    messages: [
+      {
+        id: "grp2-msg-1",
+        content: "Who's up for dinner this Saturday?",
+        senderId: "user-4",
+        timestamp: new Date(Date.now() - 259200000),
+        status: "read",
+      },
+      {
+        id: "grp2-msg-2",
+        content: "I'm in! Where should we go?",
+        senderId: "user-5",
+        timestamp: new Date(Date.now() - 255600000),
+        status: "read",
+      },
+      {
+        id: "grp2-msg-3",
+        content: "How about that new Italian place downtown?",
+        senderId: "current-user",
+        timestamp: new Date(Date.now() - 252000000),
+        status: "read",
+      },
+      {
+        id: "grp2-msg-4",
+        content: "Sounds perfect! Let's meet at 7pm.",
+        senderId: "user-6",
+        timestamp: new Date(Date.now() - 248400000),
+        status: "read",
+      },
+    ],
+    lastMessage: "Sounds perfect! Let's meet at 7pm.",
+    lastMessageTime: new Date(Date.now() - 248400000),
+    lastMessageStatus: "read",
+    unreadCount: 3,
+    createdBy: "user-4",
+  },
   {
     id: "chat-3",
+    type: "individual",
     participantId: "user-3",
     messages: [
       {
@@ -182,6 +270,7 @@ export const mockChats: Chat[] = [
   },
   {
     id: "chat-4",
+    type: "individual",
     participantId: "user-4",
     messages: [
       {
@@ -199,6 +288,7 @@ export const mockChats: Chat[] = [
   },
   {
     id: "chat-5",
+    type: "individual",
     participantId: "user-5",
     messages: [
       {
@@ -230,6 +320,7 @@ export const mockChats: Chat[] = [
   },
   {
     id: "chat-6",
+    type: "individual",
     participantId: "user-6",
     messages: [
       {
@@ -247,6 +338,7 @@ export const mockChats: Chat[] = [
   },
   {
     id: "chat-7",
+    type: "individual",
     participantId: "user-7",
     messages: [
       {
@@ -278,6 +370,7 @@ export const mockChats: Chat[] = [
   },
   {
     id: "chat-8",
+    type: "individual",
     participantId: "user-8",
     messages: [
       {
@@ -308,6 +401,7 @@ export const mockChats: Chat[] = [
   },
   {
     id: "chat-9",
+    type: "individual",
     participantId: "user-9",
     messages: [
       {

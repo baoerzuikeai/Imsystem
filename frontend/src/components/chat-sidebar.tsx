@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Menu } from "lucide-react"
+import { Search, Plus, Menu, Users } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Chat, User } from "@/types"
 import { ChatListItem } from "@/components/chat-list-item"
 
@@ -16,18 +17,43 @@ interface ChatSidebarProps {
   isOpen: boolean
   toggleSidebar: () => void
   users: User[]
+  onCreateGroup?: () => void
 }
 
-export function ChatSidebar({ chats, activeChat, setActiveChat, isOpen, toggleSidebar, users }: ChatSidebarProps) {
+export function ChatSidebar({
+  chats,
+  activeChat,
+  setActiveChat,
+  isOpen,
+  toggleSidebar,
+  users,
+  onCreateGroup,
+}: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState("all")
 
-  const filteredChats = chats.filter((chat) => {
-    const user = users.find((u) => u.id === chat.participantId)
-    return (
-      user?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  })
+  // 根据搜索和标签过滤聊天
+  const getFilteredChats = () => {
+    return chats.filter((chat) => {
+      // 首先按搜索词过滤
+      const user = chat.type === "individual" ? users.find((u) => u.id === chat.participantId) : null
+      const matchesSearch =
+        (chat.type === "individual" && user?.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (chat.type === "group" && chat.groupName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        chat.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
+
+      if (!matchesSearch) return false
+
+      // 然后按标签过滤
+      if (activeTab === "all") return true
+      if (activeTab === "direct") return chat.type === "individual"
+      if (activeTab === "groups") return chat.type === "group"
+
+      return true
+    })
+  }
+
+  const filteredChats = getFilteredChats()
 
   if (!isOpen) {
     return (
@@ -37,7 +63,9 @@ export function ChatSidebar({ chats, activeChat, setActiveChat, isOpen, toggleSi
         </Button>
         <div className="flex flex-col items-center gap-4 mt-4">
           {chats.slice(0, 5).map((chat) => {
-            const user = users.find((u) => u.id === chat.participantId)
+            const isGroup = chat.type === "group"
+            const user = !isGroup ? users.find((u) => u.id === chat.participantId) : null
+
             return (
               <Avatar
                 key={chat.id}
@@ -47,8 +75,19 @@ export function ChatSidebar({ chats, activeChat, setActiveChat, isOpen, toggleSi
                 )}
                 onClick={() => setActiveChat(chat)}
               >
-                <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-                <AvatarFallback>{user?.name.substring(0, 2)}</AvatarFallback>
+                {isGroup ? (
+                  <>
+                    <AvatarImage src={chat.groupAvatar || "/placeholder.svg"} alt={chat.groupName} />
+                    <AvatarFallback className="bg-primary/10">
+                      <Users className="h-4 w-4 text-primary" />
+                    </AvatarFallback>
+                  </>
+                ) : (
+                  <>
+                    <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
+                    <AvatarFallback>{user?.name.substring(0, 2)}</AvatarFallback>
+                  </>
+                )}
               </Avatar>
             )
           })}
@@ -61,33 +100,58 @@ export function ChatSidebar({ chats, activeChat, setActiveChat, isOpen, toggleSi
     <div className="border-r border-border bg-background h-full w-80 flex flex-col shadow-sm">
       <div className="p-4 border-b border-border flex justify-between items-center">
         <h2 className="text-xl font-bold">Chats</h2>
-        <Button variant="outline" size="icon">
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-1">
+          <Button variant="outline" size="icon" className="rounded-full" onClick={onCreateGroup}>
+            <Users className="h-4 w-4" />
+            <span className="sr-only">New Group</span>
+          </Button>
+          <Button variant="outline" size="icon" className="rounded-full">
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">New Chat</span>
+          </Button>
+        </div>
       </div>
+
       <div className="p-4 border-b border-border">
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Chats search..."
+            placeholder="Search chats..."
             className="pl-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+
+      <div className="px-4 pt-2 border-b border-border">
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="direct">Direct</TabsTrigger>
+            <TabsTrigger value="groups">Groups</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="flex-1 overflow-y-auto custom-scrollbar border-left-0">
         <div className="flex flex-col">
-          {filteredChats.map((chat) => (
-            <ChatListItem
-              key={chat.id}
-              chat={chat}
-              isActive={activeChat?.id === chat.id}
-              onClick={() => setActiveChat(chat)}
-              user={users.find((u) => u.id === chat.participantId)}
-            />
-          ))}
+          {filteredChats.length > 0 ? (
+            filteredChats.map((chat) => (
+              <ChatListItem
+                key={chat.id}
+                chat={chat}
+                isActive={activeChat?.id === chat.id}
+                onClick={() => setActiveChat(chat)}
+                users={users}
+              />
+            ))
+          ) : (
+            <div className="flex items-center justify-center h-32">
+              <p className="text-muted-foreground">No chats found</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

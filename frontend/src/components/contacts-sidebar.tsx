@@ -44,7 +44,7 @@ export function ContactsSidebar({ users, isOpen, onSelectUser, selectedUser }: C
           />
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 overflow-y-auto custom-scrollbar border-left-0">
         <div className="flex flex-col">
           {filteredUsers.map((user) => (
             <div

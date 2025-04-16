@@ -51,7 +51,7 @@ export function ContactDetails({ user }: ContactDetailsProps) {
         <Button className="rounded-full">New Chat</Button>
       </div>
 
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+      <div className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar border-left-0">
         <div>
           <h3 className="text-xs font-medium text-muted-foreground mb-2">ABOUT</h3>
           <p className="text-sm">{contactDetails.about}</p>
