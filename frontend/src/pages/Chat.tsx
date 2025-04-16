@@ -1,14 +1,9 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ChatLayout } from "@/components/chat-layout";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default function ChatPage() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <main className="">
-        <SidebarTrigger />
-        {children}
-      </main>
-    </SidebarProvider>
+    <div className="flex h-screen w-full overflow-hidden">
+      <ChatLayout />
+    </div>
   )
 }

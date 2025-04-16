@@ -1,8 +1,10 @@
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register'; // 导入 RegisterPage
-import ChatPage from './pages/Chat';
 import { Routes, Route } from 'react-router-dom';
 import PrivateRoute from './router/PrivateRoute';
+import ChatPage from './pages/Chat';
+import Layout from './pages/layout';
+
 
 function App() {
   return (
@@ -13,7 +15,9 @@ function App() {
         path="/chat"
         element={
           <PrivateRoute path="/chat">
-            <ChatPage />
+
+              <ChatPage />
+
           </PrivateRoute>
         }
       />

@@ -1,0 +1,326 @@
+import type { Chat, User } from "@/types"
+
+export const mockUsers: User[] = [
+  {
+    id: "user-1",
+    name: "Jacquenetta Slowgrave",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "online",
+  },
+  {
+    id: "user-2",
+    name: "Nickola Peever",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "offline",
+  },
+  {
+    id: "user-3",
+    name: "Farand Hume",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "online",
+  },
+  {
+    id: "user-4",
+    name: "Ossie Peasey",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "offline",
+  },
+  {
+    id: "user-5",
+    name: "Hall Negri",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "online",
+  },
+  {
+    id: "user-6",
+    name: "Elyssa Segot",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "offline",
+  },
+  {
+    id: "user-7",
+    name: "Gil Wilfing",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "online",
+  },
+  {
+    id: "user-8",
+    name: "Bab Cleaton",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "offline",
+  },
+  {
+    id: "user-9",
+    name: "Janith Satch",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "online",
+  },
+  {
+    id: "current-user",
+    name: "You",
+    avatar: "/placeholder.svg?height=40&width=40",
+    status: "online",
+  },
+]
+
+export const mockChats: Chat[] = [
+  {
+    id: "chat-1",
+    participantId: "user-1",
+    messages: [
+      {
+        id: "msg-1",
+        content: "Hey there! How's it going?",
+        senderId: "user-1",
+        timestamp: new Date(Date.now() - 3600000 * 2),
+        status: "read",
+      },
+      {
+        id: "msg-2",
+        content: "I'm doing well, thanks for asking! How about you?",
+        senderId: "current-user",
+        timestamp: new Date(Date.now() - 3600000),
+        status: "read",
+      },
+      {
+        id: "msg-3",
+        content: "Great! Looking forward to our meeting tomorrow.",
+        senderId: "user-1",
+        timestamp: new Date(Date.now() - 1800000),
+        status: "read",
+      },
+      {
+        id: "msg-4",
+        content: "Here's a sample image:",
+        senderId: "user-1",
+        timestamp: new Date(Date.now() - 900000),
+        status: "read",
+        attachments: [
+          {
+            type: "image",
+            url: "/placeholder.svg?height=200&width=300",
+            duration: "2:42",
+          },
+        ],
+      },
+      {
+        id: "msg-5",
+        content:
+          "Here's a code example:\n```javascript\nfunction hello() {\n  console.log('Hello world!');\n}\n\nhello();\n```",
+        senderId: "current-user",
+        timestamp: new Date(Date.now() - 600000),
+        status: "read",
+      },
+      {
+        id: "msg-6",
+        content:
+          "And here's a markdown example:\n\n# Heading 1\n## Heading 2\n\n- List item 1\n- List item 2\n\n**Bold text** and *italic text*\n\n> This is a blockquote\n\n[Link example](https://example.com)",
+        senderId: "user-1",
+        timestamp: new Date(Date.now() - 300000),
+        status: "read",
+      },
+    ],
+    lastMessage: "Great! Looking forward to our meeting tomorrow.",
+    lastMessageTime: new Date(Date.now() - 1800000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+  },
+  {
+    id: "chat-2",
+    participantId: "user-2",
+    messages: [
+      {
+        id: "msg-7",
+        content: "Have you checked the latest project requirements?",
+        senderId: "user-2",
+        timestamp: new Date(Date.now() - 86400000),
+        status: "read",
+      },
+      {
+        id: "msg-8",
+        content: "Yes, I've reviewed them. Let's discuss tomorrow.",
+        senderId: "current-user",
+        timestamp: new Date(Date.now() - 82800000),
+        status: "read",
+      },
+      {
+        id: "msg-9",
+        content: "Sounds perfect! I've been working on some ideas.",
+        senderId: "user-2",
+        timestamp: new Date(Date.now() - 79200000),
+        status: "read",
+      },
+    ],
+    lastMessage: "Sounds perfect! I've been working on some ideas.",
+    lastMessageTime: new Date(Date.now() - 79200000),
+    lastMessageStatus: "read",
+    unreadCount: 2,
+  },
+  {
+    id: "chat-3",
+    participantId: "user-3",
+    messages: [
+      {
+        id: "msg-10",
+        content: "How about 7 PM at the new Italian place?",
+        senderId: "user-3",
+        timestamp: new Date(Date.now() - 172800000),
+        status: "read",
+      },
+      {
+        id: "msg-11",
+        content: "That works for me! See you there.",
+        senderId: "current-user",
+        timestamp: new Date(Date.now() - 169200000),
+        status: "read",
+      },
+    ],
+    lastMessage: "How about 7 PM at the new Italian place?",
+    lastMessageTime: new Date(Date.now() - 172800000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+  },
+  {
+    id: "chat-4",
+    participantId: "user-4",
+    messages: [
+      {
+        id: "msg-12",
+        content: "Hey Bonnie, yes, definitely! We'll be there.",
+        senderId: "user-4",
+        timestamp: new Date(Date.now() - 1123200000),
+        status: "read",
+      },
+    ],
+    lastMessage: "Hey Bonnie, yes, definitely! We'll be there.",
+    lastMessageTime: new Date(Date.now() - 1123200000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+  },
+  {
+    id: "chat-5",
+    participantId: "user-5",
+    messages: [
+      {
+        id: "msg-13",
+        content: "No worries at all! I'll grab a table for us.",
+        senderId: "user-5",
+        timestamp: new Date(Date.now() - 172800000),
+        status: "read",
+      },
+      {
+        id: "msg-14",
+        content: "Here's the document you requested:",
+        senderId: "user-5",
+        timestamp: new Date(Date.now() - 169200000),
+        status: "read",
+        attachments: [
+          {
+            type: "file",
+            name: "important_documents.pdf",
+            size: "50KB",
+          },
+        ],
+      },
+    ],
+    lastMessage: "No worries at all! I'll grab a table for us.",
+    lastMessageTime: new Date(Date.now() - 172800000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+  },
+  {
+    id: "chat-6",
+    participantId: "user-6",
+    messages: [
+      {
+        id: "msg-15",
+        content: "She just told me today.",
+        senderId: "user-6",
+        timestamp: new Date(Date.now() - 172800000),
+        status: "read",
+      },
+    ],
+    lastMessage: "She just told me today.",
+    lastMessageTime: new Date(Date.now() - 172800000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+  },
+  {
+    id: "chat-7",
+    participantId: "user-7",
+    messages: [
+      {
+        id: "msg-16",
+        content: "See you in 5 minutes!",
+        senderId: "user-7",
+        timestamp: new Date(Date.now() - 86400000),
+        status: "read",
+      },
+      {
+        id: "msg-17",
+        content: "Check out this video:",
+        senderId: "user-7",
+        timestamp: new Date(Date.now() - 82800000),
+        status: "read",
+        attachments: [
+          {
+            type: "image",
+            url: "/placeholder.svg?height=200&width=300",
+            duration: "5:42",
+          },
+        ],
+      },
+    ],
+    lastMessage: "See you in 5 minutes!",
+    lastMessageTime: new Date(Date.now() - 86400000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+  },
+  {
+    id: "chat-8",
+    participantId: "user-8",
+    messages: [
+      {
+        id: "msg-18",
+        content: "If it takes long you can mail me.",
+        senderId: "user-8",
+        timestamp: new Date(Date.now() - 10800000),
+        status: "read",
+      },
+      {
+        id: "msg-19",
+        content: "Listen to this audio message:",
+        senderId: "user-8",
+        timestamp: new Date(Date.now() - 7200000),
+        status: "read",
+        attachments: [
+          {
+            type: "audio",
+            duration: "0:45",
+          },
+        ],
+      },
+    ],
+    lastMessage: "If it takes long you can mail me.",
+    lastMessageTime: new Date(Date.now() - 10800000),
+    lastMessageStatus: "read",
+    unreadCount: 0,
+  },
+  {
+    id: "chat-9",
+    participantId: "user-9",
+    messages: [
+      {
+        id: "msg-20",
+        content: "It's amazing to hear that.",
+        senderId: "user-9",
+        timestamp: new Date(Date.now() - 86400000),
+        status: "read",
+      },
+    ],
+    lastMessage: "It's amazing to hear that.",
+    lastMessageTime: new Date(Date.now() - 86400000),
+    lastMessageStatus: "read",
+    unreadCount: 4,
+  },
+]
