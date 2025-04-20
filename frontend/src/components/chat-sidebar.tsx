@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Chat, User } from "@/types"
 import { ChatListItem } from "@/components/chat-list-item"
+import { getChatAvatar, getChatTitle } from "@/data/mock-data"
 
 interface ChatSidebarProps {
   chats: Chat[]
@@ -36,17 +37,14 @@ export function ChatSidebar({
   const getFilteredChats = () => {
     return chats.filter((chat) => {
       // 首先按搜索词过滤
-      const user = chat.type === "individual" ? users.find((u) => u.id === chat.participantId) : null
-      const matchesSearch =
-        (chat.type === "individual" && user?.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (chat.type === "group" && chat.groupName?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        chat.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase())
+      const chatTitle = getChatTitle(chat._id)
+      const matchesSearch = chatTitle.toLowerCase().includes(searchQuery.toLowerCase())
 
       if (!matchesSearch) return false
 
       // 然后按标签过滤
       if (activeTab === "all") return true
-      if (activeTab === "direct") return chat.type === "individual"
+      if (activeTab === "direct") return chat.type === "private"
       if (activeTab === "groups") return chat.type === "group"
 
       return true
@@ -64,28 +62,29 @@ export function ChatSidebar({
         <div className="flex flex-col items-center gap-4 mt-4">
           {chats.slice(0, 5).map((chat) => {
             const isGroup = chat.type === "group"
-            const user = !isGroup ? users.find((u) => u.id === chat.participantId) : null
+            const chatTitle = getChatTitle(chat._id)
+            const chatAvatar = getChatAvatar(chat._id)
 
             return (
               <Avatar
-                key={chat.id}
+                key={chat._id}
                 className={cn(
                   "cursor-pointer border-2",
-                  activeChat?.id === chat.id ? "border-primary" : "border-transparent",
+                  activeChat?._id === chat._id ? "border-primary" : "border-transparent",
                 )}
                 onClick={() => setActiveChat(chat)}
               >
                 {isGroup ? (
                   <>
-                    <AvatarImage src={chat.groupAvatar || "/placeholder.svg"} alt={chat.groupName} />
+                    <AvatarImage src={chatAvatar || "/placeholder.svg"} alt={chatTitle} />
                     <AvatarFallback className="bg-primary/10">
                       <Users className="h-4 w-4 text-primary" />
                     </AvatarFallback>
                   </>
                 ) : (
                   <>
-                    <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-                    <AvatarFallback>{user?.name.substring(0, 2)}</AvatarFallback>
+                    <AvatarImage src={chatAvatar || "/placeholder.svg"} alt={chatTitle} />
+                    <AvatarFallback>{chatTitle.substring(0, 2)}</AvatarFallback>
                   </>
                 )}
               </Avatar>
@@ -140,9 +139,9 @@ export function ChatSidebar({
           {filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
               <ChatListItem
-                key={chat.id}
+                key={chat._id}
                 chat={chat}
-                isActive={activeChat?.id === chat.id}
+                isActive={activeChat?._id === chat._id}
                 onClick={() => setActiveChat(chat)}
                 users={users}
               />

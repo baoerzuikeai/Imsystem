@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { Chat, User } from "@/types"
+import { getChatAvatar, getChatTitle, getUserOnlineStatus } from "@/data/mock-data"
 
 interface GroupInfoProps {
   chat: Chat
@@ -17,17 +18,27 @@ interface GroupInfoProps {
 export function GroupInfo({ chat, users, onClose }: GroupInfoProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
+  // 确保是群聊
+  if (chat.type !== "group") {
+    return null
+  }
+
+  const chatTitle = getChatTitle(chat._id)
+  const chatAvatar = getChatAvatar(chat._id)
+
   // 获取群聊成员信息
-  const groupMembers = chat.participants
-    ? (chat.participants.map((id) => users.find((user) => user.id === id)).filter(Boolean) as User[])
-    : []
+  const groupMembers = chat.members
+    .map((member) => users.find((user) => user._id === member.userId))
+    .filter((user): user is User => user !== undefined)
 
   // 获取创建者信息
-  const creator = chat.createdBy ? users.find((user) => user.id === chat.createdBy) : null
+  const creator = users.find((user) => user._id === chat.createdBy)
 
   // 过滤成员
   const filteredMembers = searchQuery
-    ? groupMembers.filter((member) => member.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? groupMembers.filter((member) =>
+        (member.profile.nickname || member.username).toLowerCase().includes(searchQuery.toLowerCase()),
+      )
     : groupMembers
 
   return (
@@ -41,13 +52,13 @@ export function GroupInfo({ chat, users, onClose }: GroupInfoProps) {
 
       <div className="p-4 border-b border-border flex flex-col items-center gap-3">
         <Avatar className="h-20 w-20">
-          <AvatarImage src={chat.groupAvatar || "/placeholder.svg"} alt={chat.groupName} />
-          <AvatarFallback className="text-lg">{chat.groupName?.substring(0, 2)}</AvatarFallback>
+          <AvatarImage src={chatAvatar || "/placeholder.svg"} alt={chatTitle} />
+          <AvatarFallback className="text-lg">{chatTitle.substring(0, 2)}</AvatarFallback>
         </Avatar>
         <div className="text-center">
-          <h3 className="text-xl font-bold">{chat.groupName}</h3>
+          <h3 className="text-xl font-bold">{chatTitle}</h3>
           <p className="text-sm text-muted-foreground">
-            {groupMembers.length} members • Created by {creator?.name || "Unknown"}
+            {groupMembers.length} members • Created by {creator?.profile.nickname || creator?.username || "Unknown"}
           </p>
         </div>
         <div className="flex gap-2 mt-2">
@@ -79,15 +90,20 @@ export function GroupInfo({ chat, users, onClose }: GroupInfoProps) {
         <div className="p-2">
           <h4 className="text-xs font-medium text-muted-foreground px-2 py-1">MEMBERS • {filteredMembers.length}</h4>
           {filteredMembers.map((member) => (
-            <div key={member.id} className="flex items-center justify-between p-2 hover:bg-accent/50 rounded-md">
+            <div key={member._id} className="flex items-center justify-between p-2 hover:bg-accent/50 rounded-md">
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={member.avatar || "/placeholder.svg"} alt={member.name} />
-                  <AvatarFallback>{member.name.substring(0, 2)}</AvatarFallback>
+                  <AvatarImage
+                    src={member.avatar || "/placeholder.svg"}
+                    alt={member.profile.nickname || member.username}
+                  />
+                  <AvatarFallback>{(member.profile.nickname || member.username).substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">{member.name}</p>
-                  <p className="text-xs text-muted-foreground">{member.status === "online" ? "Online" : "Offline"}</p>
+                  <p className="text-sm font-medium">{member.profile.nickname || member.username}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {getUserOnlineStatus(member._id) ? "Online" : "Offline"}
+                  </p>
                 </div>
               </div>
               <DropdownMenu>

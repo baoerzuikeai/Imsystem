@@ -1,32 +1,78 @@
 export interface User {
-  id: string
-  name: string
+  _id: string
+  username: string
+  email: string
   avatar: string
-  status: "online" | "offline"
-  phone?: string
-  email?: string
+  status: {
+    online: boolean
+    lastSeen: Date
+  }
+  profile: {
+    nickname: string
+    bio: string
+  }
+  createdAt: Date
+  updatedAt: Date
 }
 
-export interface Message {
-  id: string
-  content: string
-  senderId: string
-  timestamp: Date
-  status: "sent" | "delivered" | "read"
-  attachments?: any[]
+export interface ChatMember {
+  userId: string
+  role: "owner" | "member"
+  joinedAt: Date
 }
 
 export interface Chat {
-  id: string
-  type: "individual" | "group" // 新增类型字段，区分单聊和群聊
-  participantId?: string // 单聊时的参与者ID
-  participants?: string[] // 群聊时的参与者ID列表
-  groupName?: string // 群聊名称
-  groupAvatar?: string // 群聊头像
-  messages: Message[]
-  lastMessage?: string
-  lastMessageTime?: Date
-  lastMessageStatus?: "sent" | "delivered" | "read"
+  _id: string
+  type: "private" | "group"
+  title: string | null
+  avatar: string | null
+  members: ChatMember[]
+  lastMessageAt: Date
+  createdBy: string
+  createdAt: Date
+}
+
+export interface MessageContent {
+  text?: string
+  file?: {
+    fileId: string
+    fileName: string
+  }
+}
+
+export interface MessageReadBy {
+  userId: string
+  readAt: Date
+}
+
+export interface Message {
+  _id: string
+  chatId: string
+  senderId: string
+  type: "text" | "file"
+  content: MessageContent
+  replyTo?: string
+  readBy: MessageReadBy[]
+  createdAt: Date
+}
+
+export interface File {
+  _id: string
+  name: string
+  type: string
+  size: number
+  url: string
+  uploaderId: string
+  chatId: string
+  downloads: number
+  createdAt: Date
+}
+
+export interface ChatState {
+  _id: string
+  userId: string
+  chatId: string
   unreadCount: number
-  createdBy?: string // 群聊创建者
+  lastReadMessageId: string
+  updatedAt: Date
 }

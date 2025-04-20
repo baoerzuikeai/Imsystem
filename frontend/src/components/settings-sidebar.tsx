@@ -11,7 +11,7 @@ interface SettingsSidebarProps {
 }
 
 export function SettingsSidebar({ isOpen }: SettingsSidebarProps) {
-  const currentUser = mockUsers.find((user) => user.id === "current-user")
+  const currentUser = mockUsers.find((user) => user._id === "current-user")
 
   if (!isOpen) {
     return null
@@ -27,11 +27,11 @@ export function SettingsSidebar({ isOpen }: SettingsSidebarProps) {
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={currentUser?.avatar || "/placeholder.svg"} alt={currentUser?.name} />
-              <AvatarFallback>{currentUser?.name.substring(0, 2)}</AvatarFallback>
+              <AvatarImage src={currentUser?.avatar || "/placeholder.svg"} alt={currentUser?.profile.nickname} />
+              <AvatarFallback>{currentUser?.profile.nickname.substring(0, 2)}</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-medium">{currentUser?.name}</h3>
+              <h3 className="font-medium">{currentUser?.profile.nickname}</h3>
               <p className="text-sm text-muted-foreground">Online</p>
               <Button variant="link" className="p-0 h-auto text-sm">
                 Edit Profile

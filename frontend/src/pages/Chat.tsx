@@ -21,6 +21,7 @@ export default function ChatPage() {
 
       socket.onclose = () => {
         console.log("Connection closed");
+        socketRef.current = null; // 清理引用
       };
 
       socket.onerror = (error) => {

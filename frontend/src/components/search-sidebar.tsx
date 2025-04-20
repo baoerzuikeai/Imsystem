@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Chat, User } from "@/types"
+import { getChatTitle, getLastMessageForChat, getMessagesByChatId } from "@/data/mock-data"
+import { getChatAvatar } from "@/data/mock-data"
 
 interface SearchSidebarProps {
   isOpen: boolean
@@ -16,13 +18,21 @@ interface SearchSidebarProps {
 export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredUsers = users.filter((user) => user.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredUsers = users.filter(
+    (user) =>
+      user._id !== "user-current" &&
+      (user.profile.nickname || user.username).toLowerCase().includes(searchQuery.toLowerCase()),
+  )
 
   const filteredChats = chats.filter((chat) => {
-    const user = users.find((u) => u.id === chat.participantId)
+    const chatTitle = getChatTitle(chat._id)
+    const messages = getMessagesByChatId(chat._id)
+
     return (
-      user?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      chat.messages.some((message) => message.content.toLowerCase().includes(searchQuery.toLowerCase()))
+      chatTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      messages.some(
+        (message) => message.type === "text" && message.content.text?.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
     )
   })
 
@@ -69,15 +79,18 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
                   <h3 className="text-xs font-medium text-muted-foreground px-2 py-1">CONTACTS</h3>
                   {filteredUsers.slice(0, 3).map((user) => (
                     <div
-                      key={user.id}
+                      key={user._id}
                       className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                     >
                       <Avatar>
-                        <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                        <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
+                        <AvatarImage
+                          src={user.avatar || "/placeholder.svg"}
+                          alt={user.profile.nickname || user.username}
+                        />
+                        <AvatarFallback>{(user.profile.nickname || user.username).substring(0, 2)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-medium text-sm">{user.name}</h4>
+                        <h4 className="font-medium text-sm">{user.profile.nickname || user.username}</h4>
                       </div>
                     </div>
                   ))}
@@ -88,19 +101,30 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
                 <div className="p-2">
                   <h3 className="text-xs font-medium text-muted-foreground px-2 py-1">CHATS</h3>
                   {filteredChats.slice(0, 5).map((chat) => {
-                    const user = users.find((u) => u.id === chat.participantId)
+                    const chatTitle = getChatTitle(chat._id)
+                    const lastMessage = getLastMessageForChat(chat._id)
+                    const lastMessageText =
+                      lastMessage?.type === "text"
+                        ? lastMessage.content.text
+                        : lastMessage?.type === "file"
+                          ? `Sent a file: ${lastMessage.content.file?.fileName}`
+                          : ""
+
                     return (
                       <div
-                        key={chat.id}
+                        key={chat._id}
                         className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                       >
                         <Avatar>
-                          <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-                          <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
+                          <AvatarImage
+                            src={chat.type === "group" ? chat.avatar || "/placeholder.svg" : getChatAvatar(chat._id)}
+                            alt={chatTitle}
+                          />
+                          <AvatarFallback>{chatTitle.substring(0, 2)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <h4 className="font-medium text-sm">{user?.name}</h4>
-                          <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>
+                          <h4 className="font-medium text-sm">{chatTitle}</h4>
+                          <p className="text-xs text-muted-foreground truncate">{lastMessageText}</p>
                         </div>
                       </div>
                     )
@@ -126,19 +150,30 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
             filteredChats.length > 0 ? (
               <div className="flex flex-col p-2">
                 {filteredChats.map((chat) => {
-                  const user = users.find((u) => u.id === chat.participantId)
+                  const chatTitle = getChatTitle(chat._id)
+                  const lastMessage = getLastMessageForChat(chat._id)
+                  const lastMessageText =
+                    lastMessage?.type === "text"
+                      ? lastMessage.content.text
+                      : lastMessage?.type === "file"
+                        ? `Sent a file: ${lastMessage.content.file?.fileName}`
+                        : ""
+
                   return (
                     <div
-                      key={chat.id}
+                      key={chat._id}
                       className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                     >
                       <Avatar>
-                        <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-                        <AvatarFallback>{user?.name?.substring(0, 2)}</AvatarFallback>
+                        <AvatarImage
+                          src={chat.type === "group" ? chat.avatar || "/placeholder.svg" : getChatAvatar(chat._id)}
+                          alt={chatTitle}
+                        />
+                        <AvatarFallback>{chatTitle.substring(0, 2)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <h4 className="font-medium text-sm">{user?.name}</h4>
-                        <p className="text-xs text-muted-foreground truncate">{chat.lastMessage}</p>
+                        <h4 className="font-medium text-sm">{chatTitle}</h4>
+                        <p className="text-xs text-muted-foreground truncate">{lastMessageText}</p>
                       </div>
                     </div>
                   )
@@ -162,16 +197,19 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
               <div className="flex flex-col p-2">
                 {filteredUsers.map((user) => (
                   <div
-                    key={user.id}
+                    key={user._id}
                     className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                   >
                     <Avatar>
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
+                      <AvatarImage
+                        src={user.avatar || "/placeholder.svg"}
+                        alt={user.profile.nickname || user.username}
+                      />
+                      <AvatarFallback>{(user.profile.nickname || user.username).substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h4 className="font-medium text-sm">{user.name}</h4>
-                      <p className="text-xs text-muted-foreground">{user.status === "online" ? "Online" : "Offline"}</p>
+                      <h4 className="font-medium text-sm">{user.profile.nickname || user.username}</h4>
+                      <p className="text-xs text-muted-foreground">{user.status.online ? "Online" : "Offline"}</p>
                     </div>
                   </div>
                 ))}

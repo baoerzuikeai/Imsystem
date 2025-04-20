@@ -22,7 +22,9 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
 
   // 过滤用户
   const filteredUsers = users.filter(
-    (user) => user.id !== "current-user" && user.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    (user) =>
+      user._id !== "user-current" &&
+      (user.profile.nickname || user.username).toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   const toggleUserSelection = (userId: string) => {
@@ -41,7 +43,7 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
 
   const handleCreateGroup = () => {
     if (groupName.trim() && selectedUsers.length > 0) {
-      onCreateGroup(groupName, [...selectedUsers, "current-user"])
+      onCreateGroup(groupName, [...selectedUsers, "user-current"])
     }
   }
 
@@ -76,21 +78,24 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
               {selectedUsers.length > 0 && (
                 <div className="flex flex-wrap gap-2 p-2">
                   {selectedUsers.map((userId) => {
-                    const user = users.find((u) => u.id === userId)
+                    const user = users.find((u) => u._id === userId)
                     if (!user) return null
 
                     return (
-                      <div key={user.id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
+                      <div key={user._id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                          <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
+                          <AvatarImage
+                            src={user.avatar || "/placeholder.svg"}
+                            alt={user.profile.nickname || user.username}
+                          />
+                          <AvatarFallback>{(user.profile.nickname || user.username).substring(0, 2)}</AvatarFallback>
                         </Avatar>
-                        <span className="text-xs">{user.name}</span>
+                        <span className="text-xs">{user.profile.nickname || user.username}</span>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-4 w-4 ml-1"
-                          onClick={() => toggleUserSelection(user.id)}
+                          onClick={() => toggleUserSelection(user._id)}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -104,21 +109,24 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
 
               {filteredUsers.map((user) => (
                 <div
-                  key={user.id}
+                  key={user._id}
                   className="flex items-center justify-between p-2 hover:bg-accent/50 rounded-md cursor-pointer"
-                  onClick={() => toggleUserSelection(user.id)}
+                  onClick={() => toggleUserSelection(user._id)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                      <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
+                      <AvatarImage
+                        src={user.avatar || "/placeholder.svg"}
+                        alt={user.profile.nickname || user.username}
+                      />
+                      <AvatarFallback>{(user.profile.nickname || user.username).substring(0, 2)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">{user.status === "online" ? "Online" : "Offline"}</p>
+                      <p className="text-sm font-medium">{user.profile.nickname || user.username}</p>
+                      <p className="text-xs text-muted-foreground">{user.status.online ? "Online" : "Offline"}</p>
                     </div>
                   </div>
-                  <Checkbox checked={selectedUsers.includes(user.id)} />
+                  <Checkbox checked={selectedUsers.includes(user._id)} />
                 </div>
               ))}
             </div>
@@ -147,16 +155,19 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
                 <label className="text-sm font-medium mb-2 block">Group Members</label>
                 <div className="flex flex-wrap gap-2">
                   {selectedUsers.map((userId) => {
-                    const user = users.find((u) => u.id === userId)
+                    const user = users.find((u) => u._id === userId)
                     if (!user) return null
 
                     return (
-                      <div key={user.id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
+                      <div key={user._id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                          <AvatarFallback>{user.name.substring(0, 2)}</AvatarFallback>
+                          <AvatarImage
+                            src={user.avatar || "/placeholder.svg"}
+                            alt={user.profile.nickname || user.username}
+                          />
+                          <AvatarFallback>{(user.profile.nickname || user.username).substring(0, 2)}</AvatarFallback>
                         </Avatar>
-                        <span className="text-xs">{user.name}</span>
+                        <span className="text-xs">{user.profile.nickname || user.username}</span>
                       </div>
                     )
                   })}
