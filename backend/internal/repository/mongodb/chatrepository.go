@@ -89,3 +89,29 @@ func (r *chatRepository) DeleteChat(ctx context.Context, chatID string) error {
 	_, err := r.collection.DeleteOne(ctx, bson.M{"_id": chatID})
 	return err
 }
+
+func (r *chatRepository) GetChatsByUserAndType(ctx context.Context, userID string, chatType string) ([]*domain.Chat, error) {
+    userObjID, err := primitive.ObjectIDFromHex(userID)
+    if err != nil {
+        return nil, err
+    }
+    filter := bson.M{
+        "type": chatType,
+        "members": bson.M{
+            "$elemMatch": bson.M{
+                "userId": userObjID,
+            },
+        },
+    }
+    cursor, err := r.collection.Find(ctx, filter)
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+
+    var chats []*domain.Chat
+    if err := cursor.All(ctx, &chats); err != nil {
+        return nil, err
+    }
+    return chats, nil
+}

@@ -42,6 +42,7 @@ func main() {
 	// 初始化services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpiresIn)
 	messageService := service.NewMessageService(messageRepo, chatRepo)
+	chatService := service.NewChatService(chatRepo) // 新增 chatService
 
 	// 初始化 WebSocket manager
 	wsManager := websocket.NewManager(messageService)
@@ -51,12 +52,14 @@ func main() {
 	authHandler := handler.NewAuthHandler(authService)
 	wsHandler := handler.NewHandler(wsManager)
 	messageHandler := handler.NewMessageHandler(messageService)
+	chatHandler := handler.NewChatHandler(chatService) // 新增 chatHandler
+
 	//设置Gin路由
 	r := gin.Default()
 
 	//配置 CORS
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+	config.AllowOrigins = []string{"http://localhost:5173", "http://192.168.31.186:5173"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	config.AllowCredentials = true
@@ -73,9 +76,11 @@ func main() {
 	protected := r.Group("/api/v1")
 	protected.Use(middleware.AuthMiddleware(cfg.JWT.Secret))
 	{
+
 		protected.GET("/auth/user", authHandler.GetUserDetail)
 		protected.GET("/ws", wsHandler.HandleWebSocket)
 		protected.GET("/chats/:chatId/messages", messageHandler.GetChatMessages)
+		protected.GET("/chats/private", chatHandler.GetPrivateChatFriends)
 	}
 
 	// 启动服务器

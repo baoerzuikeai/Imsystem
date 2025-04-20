@@ -19,9 +19,11 @@ export function LoginForm({
     e.preventDefault() // Prevent default form submission
 
     try {
-      const response = await axios.post("http://192.168.31.75:8080/api/v1/auth/login", { // Replace with your API endpoint
+      const response = await axios.post("http://192.168.31.186:8080/api/v1/auth/login", { // Replace with your API endpoint
         email: email,
         password: password,
+      },{
+        withCredentials:true,
       })
 
       // Handle successful login

@@ -21,4 +21,7 @@ type ChatRepository interface {
 
 	// 删除聊天
 	DeleteChat(ctx context.Context, chatID string) error
+
+	// 根据用户ID和聊天类型查询聊天
+	GetChatsByUserAndType(ctx context.Context, userID string, chatType string) ([]*domain.Chat, error)
 }

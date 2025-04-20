@@ -29,6 +29,7 @@ func NewHandler(manager *ws.Manager) *Handler {
 
 func (h *Handler) HandleWebSocket(c *gin.Context) {
 	userID := c.GetString("userID") // 从JWT中获取
+	log.Println("WebSocket userID:", userID)
 	if userID == "" {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
