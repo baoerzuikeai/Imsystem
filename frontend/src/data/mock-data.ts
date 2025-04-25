@@ -1,4 +1,6 @@
-import type { User, Chat, Message, File, ChatState } from "@/types"
+"use client"
+
+import type { User, Chat, Message, File, ChatState,AIChat } from "@/types"
 
 // 创建当前用户
 export const currentUser: User = {
@@ -904,4 +906,41 @@ export function getUserOnlineStatus(userId: string): boolean {
   if (userId === "user-current") return currentUser.status.online
   const user = mockUsers.find((u) => u._id === userId)
   return user?.status.online || false
+}
+
+// 创建模拟AI助手聊天
+export const mockAIChats: AIChat[] = [
+  {
+    _id: "ai-chat-1",
+    userId: "user-current",
+    question: "How do I optimize React performance?",
+    answer:
+      "# React Performance Optimization\n\nHere are some key strategies to optimize your React application:\n\n1. **Use React.memo for Component Memoization**\n   Prevent unnecessary re-renders by memoizing components that don't need to update frequently.\n\n2. **Implement useCallback and useMemo**\n   Memoize functions and computed values to avoid recreating them on each render.\n\n3. **Virtualize Long Lists**\n   Use libraries like `react-window` or `react-virtualized` to render only visible items in long lists.\n\n4. **Code Splitting with React.lazy**\n   Split your code into smaller chunks to reduce initial load time:\n\n```jsx\nconst LazyComponent = React.lazy(() => import('./LazyComponent'));\n\nfunction App() {\n  return (\n    <React.Suspense fallback={<div>Loading...</div>}>\n      <LazyComponent />\n    </React.Suspense>\n  );\n}\n```\n\n5. **Avoid Inline Function Definitions**\n   Define functions outside render to prevent new function creation on each render.\n\n6. **Use Production Builds**\n   Always use production builds for deployment as they're optimized and minified.\n\n7. **Implement shouldComponentUpdate**\n   For class components, implement this lifecycle method to control when a component should re-render.\n\n8. **Avoid Excessive State Updates**\n   Batch state updates when possible and avoid unnecessary state changes.\n\n9. **Use Web Workers for CPU-Intensive Tasks**\n   Move heavy computations off the main thread to keep your UI responsive.\n\n10. **Profile and Measure Performance**\n    Use React DevTools Profiler to identify performance bottlenecks in your application.\n\nImplementing these strategies will significantly improve your React application's performance and user experience.",
+    type: "optimization",
+    createdAt: new Date(Date.now() - 86400000 * 2), // 2 days ago
+  },
+  {
+    _id: "ai-chat-2",
+    userId: "user-current",
+    question: "What are the best practices for TypeScript with React?",
+    answer:
+      "# TypeScript with React: Best Practices\n\n## Type Definitions\n\n### Component Props\n\n```tsx\ntype ButtonProps = {\n  text: string;\n  onClick?: () => void;\n  variant?: 'primary' | 'secondary';\n  disabled?: boolean;\n};\n\nconst Button = ({ text, onClick, variant = 'primary', disabled = false }: ButtonProps) => {\n  return (\n    <button \n      onClick={onClick} \n      disabled={disabled}\n      className={`btn btn-${variant}`}\n    >\n      {text}\n    </button>\n  );\n};\n```\n\n### React.FC vs. Function Declaration\n\nPrefer function declarations over `React.FC` for better type inference:\n\n```tsx\n// Recommended\nconst Component = ({ name }: { name: string }) => <div>{name}</div>;\n\n// Not recommended\nconst Component: React.FC<{ name: string }> = ({ name }) => <div>{name}</div>;\n```\n\n## Hooks\n\n### useState with TypeScript\n\n```tsx\n// Explicit type annotation\nconst [user, setUser] = useState<User | null>(null);\n\n// Type inference works here\nconst [count, setCount] = useState(0);\n```\n\n### useRef with TypeScript\n\n```tsx\nconst inputRef = useRef<HTMLInputElement>(null);\n```\n\n## Event Handling\n\n```tsx\nconst handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {\n  console.log(event.target.value);\n};\n\nconst handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {\n  event.preventDefault();\n  // form submission logic\n};\n```\n\n## Children Props\n\n```tsx\ntype ContainerProps = {\n  children: React.ReactNode;\n  title: string;\n};\n\nconst Container = ({ children, title }: ContainerProps) => (\n  <div>\n    <h2>{title}</h2>\n    {children}\n  </div>\n);\n```\n\n## Custom Hooks\n\n```tsx\nfunction useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {\n  // Implementation...\n  return [storedValue, setValue];\n}\n\n// Usage\nconst [name, setName] = useLocalStorage<string>('name', 'John');\n```\n\n## Type Assertions\n\nUse type assertions sparingly and only when you're certain about the type:\n\n```tsx\nconst element = document.getElementById('root') as HTMLElement;\n// or\nconst element = <HTMLElement>document.getElementById('root');\n```\n\n## Discriminated Unions\n\n```tsx\ntype LoadingState = { status: 'loading' };\ntype SuccessState = { status: 'success'; data: User[] };\ntype ErrorState = { status: 'error'; error: Error };\n\ntype State = LoadingState | SuccessState | ErrorState;\n\nfunction renderState(state: State) {\n  switch (state.status) {\n    case 'loading':\n      return <Spinner />;\n    case 'success':\n      return <UserList users={state.data} />;\n    case 'error':\n      return <ErrorMessage error={state.error} />;\n  }\n}\n```\n\nImplementing these practices will help you write more maintainable and type-safe React applications with TypeScript.",
+    type: "qa",
+    createdAt: new Date(Date.now() - 86400000), // 1 day ago
+  },
+  {
+    _id: "ai-chat-3",
+    userId: "user-current",
+    question:
+      "Can you review this code for me?\n\n```javascript\nfunction fetchData() {\n  fetch('https://api.example.com/data')\n    .then(response => response.json())\n    .then(data => {\n      console.log(data);\n      return data;\n    })\n    .catch(error => {\n      console.log('Error:', error);\n    });\n}\n```",
+    answer:
+      "# Code Review\n\nLet's review your `fetchData` function:\n\n```javascript\nfunction fetchData() {\n  fetch('https://api.example.com/data')\n    .then(response => response.json())\n    .then(data => {\n      console.log(data);\n      return data;\n    })\n    .catch(error => {\n      console.log('Error:', error);\n    });\n}\n```\n\n## Issues and Improvements\n\n### 1. Function doesn't return anything\n\nYour function processes the data but doesn't return the Promise, making it impossible for callers to access the fetched data.\n\n### 2. No error handling for non-2xx responses\n\nThe `fetch` API doesn't reject on HTTP error status codes (like 404 or 500). You need to check `response.ok`.\n\n### 3. Console logs in production code\n\nConsole logs should be removed or replaced with proper logging in production code.\n\n### 4. No loading state indication\n\nThere's no way for users to know when data is being fetched.\n\n## Improved Version\n\n```javascript\nasync function fetchData() {\n  try {\n    const response = await fetch('https://api.example.com/data');\n    \n    if (!response.ok) {\n      throw new Error(`HTTP error! Status: ${response.status}`);\n    }\n    \n    const data = await response.json();\n    return data;\n  } catch (error) {\n    // Consider using a proper error handling strategy instead of console.log\n    console.error('Failed to fetch data:', error);\n    throw error; // Re-throw to allow callers to handle the error\n  }\n}\n\n// Usage example\nasync function handleDataFetching() {\n  try {\n    const data = await fetchData();\n    // Process data here\n  } catch (error) {\n    // Handle error appropriately (e.g., show error message to user)\n  }\n}\n```\n\n## Additional Suggestions\n\n1. **Add timeout handling**:\n   ```javascript\n   const controller = new AbortController();\n   const timeoutId = setTimeout(() => controller.abort(), 5000);\n   \n   try {\n     const response = await fetch('https://api.example.com/data', {\n       signal: controller.signal\n     });\n     // Process response\n   } catch (error) {\n     if (error.name === 'AbortError') {\n       // Handle timeout\n     }\n   } finally {\n     clearTimeout(timeoutId);\n   }\n   ```\n\n2. **Consider using a request library** like axios which handles some of these issues automatically.\n\n3. **Add request parameters** for flexibility:\n   ```javascript\n   async function fetchData(url, options = {}) {\n     // Implementation\n   }\n   ```\n\n4. **Add retry logic** for transient failures.\n\nThese improvements will make your code more robust, maintainable, and user-friendly.",
+    type: "code_review",
+    createdAt: new Date(Date.now() - 3600000 * 5), // 5 hours ago
+  },
+]
+
+// 辅助函数：获取AI聊天历史
+export function getAIChats(userId: string): AIChat[] {
+  return mockAIChats.filter((chat) => chat.userId === userId)
 }

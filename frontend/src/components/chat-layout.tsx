@@ -15,6 +15,7 @@ import { useMobile } from "@/hooks/use-mobile"
 import type { Chat, User, Message } from "@/types"
 import { mockChats, mockUsers, currentUser, getMessagesByChatId } from "@/data/mock-data"
 import { UserProvider } from "@/contexts/user-context"
+import { AIAssistant } from "@/components/ai-assistant"
 
 export function ChatLayout() {
   const isMobile = useMobile()
@@ -251,6 +252,7 @@ export function ChatLayout() {
             <NavSidebar activeSection={activeSection} setActiveSection={setActiveSection} />
             {renderContent()}
           </div>
+          <AIAssistant />
         </div>
       </WebSocketProvider>
     </UserProvider>

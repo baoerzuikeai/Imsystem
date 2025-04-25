@@ -126,3 +126,30 @@
 .dark .hljs {
   @apply bg-gray-800;
 }
+
+.markdown-content pre {
+  @apply overflow-x-auto max-w-full;
+}
+
+.markdown-content code {
+  @apply whitespace-pre-wrap break-words;
+}
+
+/* 确保表格不会导致水平滚动 */
+.markdown-content table {
+  @apply w-full table-auto;
+  display: block;
+  overflow-x: auto;
+}
+
+/* 确保长文本会自动换行 */
+.markdown-content p,
+.markdown-content li,
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  @apply break-words;
+}

@@ -76,3 +76,12 @@ export interface ChatState {
   lastReadMessageId: string
   updatedAt: Date
 }
+
+export interface AIChat {
+  _id: string
+  userId: string
+  question: string
+  answer: string
+  type: "code_review" | "qa" | "optimization"
+  createdAt: Date
+}
