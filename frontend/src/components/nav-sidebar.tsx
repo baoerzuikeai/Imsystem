@@ -3,13 +3,16 @@ import { MessageSquare, Users, Settings, Search, Moon, Trash2, LogOut } from "lu
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useApi } from "@/hooks/use-api"
 
 interface NavSidebarProps {
   activeSection: string
   setActiveSection: (section: string) => void
+  
 }
 
 export function NavSidebar({ activeSection, setActiveSection }: NavSidebarProps) {
+  const { logout } = useApi()
   return (
     <div className="w-16 h-full bg-background border-r border-border flex flex-col items-center py-6 shadow-sm">
       <div className="flex flex-col items-center gap-6 flex-1">
@@ -107,18 +110,9 @@ export function NavSidebar({ activeSection, setActiveSection }: NavSidebarProps)
 
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
-                <Trash2 className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              <p>Trash</p>
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full"
+                onClick={() => logout()}
+              >
                 <LogOut className="h-5 w-5" />
               </Button>
             </TooltipTrigger>

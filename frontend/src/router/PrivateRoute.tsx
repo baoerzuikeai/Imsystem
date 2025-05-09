@@ -6,7 +6,7 @@ interface PrivateRouteProps {
 }
 
 function PrivateRoute({ children}: PrivateRouteProps) {
-  const token = localStorage.getItem('token'); // 从 localStorage 获取 token
+  const token = localStorage.getItem('authToken'); // 从 localStorage 获取 token
 
   if (!token) {
     // 如果没有 token，重定向到登录页面

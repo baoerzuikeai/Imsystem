@@ -85,3 +85,25 @@ export interface AIChat {
   type: "code_review" | "qa" | "optimization"
   createdAt: Date
 }
+
+export interface RegisterRequestDto{
+  username: string
+  email: string
+  password: string 
+  nickname: string
+} 
+
+export interface LoginRequestDto{
+  email: string
+  password: string
+}
+
+export interface LoginResponse {
+  token: string;
+  user: User;
+}
+
+export interface RegisterResponse {
+  message: string;
+  user: User;
+}
