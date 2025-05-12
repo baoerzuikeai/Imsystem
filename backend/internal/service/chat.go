@@ -11,6 +11,8 @@ import (
 type ChatService interface {
 	// 返回该用户的所有私聊好友（去重后的好友列表）
 	GetPrivateChatFriends(ctx context.Context, currentUserID string) ([]*domain.User, error)
+	GetPrivateChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
+	GetGroupChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
 }
 
 type chatService struct {
@@ -55,4 +57,12 @@ func (s *chatService) GetPrivateChatFriends(ctx context.Context, currentUserID s
 		friends = append(friends, friend)
 	}
 	return friends, nil
+}
+
+func (s *chatService) GetPrivateChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error) {
+	return s.chatRepo.GetChatsByUserAndType(ctx, userID, "private")
+}
+
+func (s *chatService) GetGroupChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error) {
+	return s.chatRepo.GetChatsByUserAndType(ctx, userID, "group")
 }

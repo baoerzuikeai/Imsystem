@@ -80,7 +80,9 @@ func main() {
 		protected.GET("/auth/user", authHandler.GetUserDetail)
 		protected.GET("/ws", wsHandler.HandleWebSocket)
 		protected.GET("/chats/:chatId/messages", messageHandler.GetChatMessages)
-		protected.GET("/chats/private", chatHandler.GetPrivateChatFriends)
+		protected.GET("/chats/friends", chatHandler.GetPrivateChatFriends)
+		protected.GET("/chats/private", chatHandler.GetPrivateChatByUserID)
+		protected.GET("/chats/group", chatHandler.GetGroupChatByUserID)
 	}
 
 	// 启动服务器
