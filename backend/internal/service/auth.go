@@ -96,6 +96,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*domai
 
 func (s *AuthService) GetUserByID(ctx context.Context, userID string) (*domain.User, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
+	user.Password = "" // 不返回密码
 	if err != nil {
 		return nil, err
 	}

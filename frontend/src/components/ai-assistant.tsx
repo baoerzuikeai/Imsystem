@@ -84,7 +84,7 @@ export function AIAssistant() {
   return (
     <div
       className={`fixed bottom-6 right-6 bg-background border border-border rounded-lg shadow-lg overflow-hidden transition-all duration-200 ${
-        isMinimized ? "w-72 h-15" : "w-80 sm:w-96 h-[500px]"
+        isMinimized ? "w-72 h-15" : "w-80 sm:w-96 h-[800px]"
       }`}
     >
       <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
@@ -110,7 +110,7 @@ export function AIAssistant() {
 
       {!isMinimized && (
         <>
-          <div className="flex-1 p-3 overflow-y-auto overflow-x-hidden custom-scrollbar h-[calc(500px-120px)]">
+          <div className="flex-1 p-3 overflow-y-auto overflow-x-hidden custom-scrollbar h-[calc(800px-120px)]">
             {aiChats.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-4">
                 <Bot className="h-12 w-12 text-muted-foreground mb-2" />

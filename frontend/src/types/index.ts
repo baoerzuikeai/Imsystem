@@ -15,6 +15,15 @@ export interface User {
   updatedAt: Date
 }
 
+export interface UserInfo {
+  id:string
+  username: string
+  email: string
+  avatar: string
+  nickname: string
+}
+
+
 export interface ChatMember {
   userId: string
   role: "owner" | "member"
@@ -100,10 +109,10 @@ export interface LoginRequestDto{
 
 export interface LoginResponse {
   token: string;
-  user: User;
+  user: UserInfo;
 }
 
 export interface RegisterResponse {
   message: string;
-  user: User;
+  user: UserInfo;
 }

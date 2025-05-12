@@ -1,13 +1,14 @@
 // src/context/api-provider.tsx
 import React, { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { api as backendApiService } from '@/services/api'; // 重命名导入的 api 服务，避免与组件内的 api 变量混淆
-import type { User, LoginRequestDto} from '@/types';
+import type { User, LoginRequestDto,UserInfo} from '@/types';
 import { useNavigate } from 'react-router-dom'; // 导入 useNavigate 用于路由跳转
 // --- Auth-specific types (将来可以拆分到 auth-context.ts) ---
 interface AuthState {
-  user: User | null;
+  userInfo: UserInfo | null;
   isAuthenticated: boolean;
   isLoadingAuth: boolean; // 明确这是认证加载状态
+  currentUserDetail: User | null; // 当前用户的详细信息
 }
 
 interface AuthOperations {
@@ -37,7 +38,8 @@ interface ApiProviderProps {
 
 export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
   // --- Auth State and Logic (将来可以来自 AuthProvider 的 useReducer 或 useState) ---
-  const [user, setUser] = useState<User | null>(null);
+  const [userInfo, setUser] = useState<UserInfo | null>(null);
+  const [currentUserDetail, setCurrentUserDetails] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
   const navigate = useNavigate();
@@ -48,10 +50,10 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
       try {
         const tokenExists = backendApiService.auth.isAuthenticated();
         if (tokenExists) {
-          const currentUser = await backendApiService.auth.getCurrentUser();
-          setUser(currentUser);
+          const UserDetail = await backendApiService.auth.getCurrentUser();
+          setCurrentUserDetails(UserDetail);
           setIsAuthenticated(true);
-          console.log('ApiProvider: Auth initialized, user loaded:', currentUser.username);
+          console.log('ApiProvider: Auth initialized, user loaded:', UserDetail.username);
         } else {
           setIsAuthenticated(false);
           setUser(null);
@@ -85,6 +87,7 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     try {
       backendApiService.auth.logout();
       setUser(null);
+      setCurrentUserDetails(null)
       setIsAuthenticated(false);
       console.log('ApiProvider: User logged out');
       navigate('/login'); // 登出后跳转到登录页面
@@ -104,7 +107,8 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
   // 目前只包含 auth 部分，未来可以扩展
   const contextValue = useMemo(() => ({
     // Auth part
-    user,
+    userInfo,
+    currentUserDetail,
     isAuthenticated,
     isLoadingAuth,
     login,
@@ -112,7 +116,7 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     // Chat part (example)
     // messages,
     // fetchMessages,
-  }), [user, isAuthenticated, isLoadingAuth /*, messages */]); // 依赖项也需要更新
+  }), [userInfo, currentUserDetail,isAuthenticated, isLoadingAuth/*, messages */]); // 依赖项也需要更新
 
   return (
     <ApiContext.Provider value={contextValue}>

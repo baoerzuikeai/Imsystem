@@ -87,11 +87,6 @@ func (h *AuthHandler) GetUserDetail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, dto.UserInfo{
-		ID:       user.ID.Hex(),
-		Username: user.Username,
-		Email:    user.Email,
-		Nickname: user.Profile.Nickname,
-		Avatar:   user.Avatar,
-	})
+	c.JSON(http.StatusOK,user)
 }
+
