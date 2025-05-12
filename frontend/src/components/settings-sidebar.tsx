@@ -5,20 +5,25 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { useApi } from "@/hooks/use-api"
+import { useEffect } from "react"
 
 interface SettingsSidebarProps {
   isOpen: boolean
 }
 
 export function SettingsSidebar({ isOpen }: SettingsSidebarProps) {
-  const { currentUserDetail } = useApi()
-
+  const { currentUserDetail,getCurrentUser} = useApi()
+  useEffect(() => {
+    getCurrentUser()
+  }
+  , [])
+  console.log("currentUserDetail", currentUserDetail)
   if (!isOpen) {
     return null
   }
 
   return (
-    <div className="border-r border-border bg-background h-full w-80 flex flex-col shadow-sm ">
+    <div className="border-r border-border bg-background h-full w-80 flex flex-col shadow-sm border-b-0">
       {/* Header */}
       <div className="p-4 flex items-center gap-2 border-b border-border">
         <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -36,41 +41,41 @@ export function SettingsSidebar({ isOpen }: SettingsSidebarProps) {
         <div >
           <div className="flex flex-col ">
             <h3 className="text-lg font-bold">{currentUserDetail?.profile.nickname}</h3>
-            <p className="text-sm text-muted-foreground">online</p>
+            <p className="text-sm text-green-600">online</p>
           </div>
         </div>
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-6 top-6 rounded-full bg-primary/10 border-primary/20"
+          className="absolute right-6 top-16.5 rounded-full bg-primary/10 border-primary/20"
         >
-          <Camera className="h-5 w-5 text-primary" />
+          <Camera className="h-6 w-6 text-primary" />
         </Button>
       </div>
 
       {/* Account Section */}
-      <div className="px-6 py-1 border-b border-border">
-        <h4 className="text-sm text-primary mb-4">Account</h4>
+      <div className="px-6 py-1 border-b border-border border-t-0">
+        <h4 className="text-sm mb-3 text-sky-700">Account</h4>
 
-        <div className="space-y-2">
+        <div className="space-y-2 ">
           <div>
-            <p className="text-sm font-medium">{currentUserDetail?.username || "None"}</p>
-            <p className="text-xs text-muted-foreground">Username</p>
+            <p className="text-sm ">{currentUserDetail?.username || "None"}</p>
+            <p className="text-xs text-muted-foreground border-b ">Username</p>
           </div>
 
           <div>
-            <p className="text-sm font-medium mb-1">Bio</p>
-            <p className="text-sm text-muted-foreground">
-              {currentUserDetail?.profile?.bio || "Add a few words about yourself"}
+            <p className="text-sm ">
+              {currentUserDetail?.profile?.bio || "Add a few words about yourself"}  
             </p>
+            <p className="text-sm mb-1 text-muted-foreground">Bio</p>
           </div>
         </div>
       </div>
 
       {/* Settings Section */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar ">
+      <div className="flex-1 overflow-y-auto custom-scrollbar border-t-1 mt-3 ">
         <div className="px-6 py-4">
-          <h4 className="text-sm text-primary mb-4">Settings</h4>
+          <h4 className="text-sm text-sky-700 mb-3">Settings</h4>
 
           <div className="space-y-4">
             <div className="flex items-center gap-3 py-1">

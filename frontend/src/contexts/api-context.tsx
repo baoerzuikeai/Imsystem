@@ -14,6 +14,7 @@ interface AuthState {
 interface AuthOperations {
   login: (credentials: LoginRequestDto) => Promise<void>;
   logout: () => void;
+  getCurrentUser: () => void; // 获取当前用户信息
   // initializeAuth is internal to the provider for now
 }
 
@@ -95,6 +96,17 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
       console.error("ApiProvider: Logout failed:", error);
     }
   };
+
+  const getCurrentUser = async () => {
+    try {
+      const userDetail = await backendApiService.auth.getCurrentUser();
+      setCurrentUserDetails(userDetail);
+      return userDetail;
+    }
+    catch (error) {
+      console.error("ApiProvider: Failed to fetch current user:", error);
+    }
+  }
   // --- End of Auth State and Logic ---
 
 
@@ -113,6 +125,7 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     isLoadingAuth,
     login,
     logout,
+    getCurrentUser,
     // Chat part (example)
     // messages,
     // fetchMessages,
