@@ -38,11 +38,18 @@ func main() {
 	userRepo := mongodb.NewUserRepository(db)
 	messageRepo := mongodb.NewMessageRepository(db)
 	chatRepo := mongodb.NewChatRepository(db)
+	fileRepo := mongodb.NewFileRepository(db)
+	aiChatRepo := mongodb.NewAIChatRepository(db)
+
+	// 初始化 DeepSeekClient
+	deepSeekClient := service.NewDeepSeekClient(cfg.AI.APIKey, cfg.AI.Url)
 
 	// 初始化services
 	authService := service.NewAuthService(userRepo, cfg.JWT.Secret, cfg.JWT.ExpiresIn)
 	messageService := service.NewMessageService(messageRepo, chatRepo)
-	chatService := service.NewChatService(chatRepo) // 新增 chatService
+	chatService := service.NewChatService(chatRepo)
+	fileService := service.NewFileService(fileRepo, cfg.File.BasePath)
+	aiChatService := service.NewAIChatService(aiChatRepo, deepSeekClient)
 
 	// 初始化 WebSocket manager
 	wsManager := websocket.NewManager(messageService)
@@ -52,7 +59,9 @@ func main() {
 	authHandler := handler.NewAuthHandler(authService)
 	wsHandler := handler.NewHandler(wsManager)
 	messageHandler := handler.NewMessageHandler(messageService)
-	chatHandler := handler.NewChatHandler(chatService) // 新增 chatHandler
+	chatHandler := handler.NewChatHandler(chatService)
+	fileHandler := handler.NewFileHandler(fileService)
+	aichatHandler := handler.NewAIChatHandler(aiChatService)
 
 	//设置Gin路由
 	r := gin.Default()
@@ -65,6 +74,9 @@ func main() {
 	config.AllowCredentials = true
 
 	r.Use(cors.New(config))
+
+	// 设置静态文件服务器
+	r.Static("/uploads", "./uploads")
 	//公开路由
 	public := r.Group("/api/v1")
 	{
@@ -83,6 +95,8 @@ func main() {
 		protected.GET("/chats/friends", chatHandler.GetPrivateChatFriends)
 		protected.GET("/chats/private", chatHandler.GetPrivateChatByUserID)
 		protected.GET("/chats/group", chatHandler.GetGroupChatByUserID)
+		protected.POST("/files/upload", fileHandler.UploadFile)
+		protected.POST("/ai/chat", aichatHandler.HandleAIChat)
 	}
 
 	// 启动服务器

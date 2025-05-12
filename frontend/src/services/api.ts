@@ -128,5 +128,7 @@ export const api = {
       return false;
     }
   },
-  //
+  //添加用户相关api
+  user: {
+  },
 };

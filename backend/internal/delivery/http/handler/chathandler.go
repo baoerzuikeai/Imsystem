@@ -76,3 +76,5 @@ func (h *ChatHandler) GetGroupChatByUserID(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, chats)
 }
+
+

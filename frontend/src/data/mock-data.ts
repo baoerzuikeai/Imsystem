@@ -766,7 +766,7 @@ export const mockFiles: File[] = [
     name: "project_mockup.png",
     type: "image/png",
     size: 1024000, // 1MB
-    url: "/placeholder.svg?height=200&width=300",
+    url: "http://localhost:8080/uploads/6821c1943d82d96189c9b144.jpg",
     uploaderId: "user-1",
     chatId: "chat-1",
     downloads: 2,
@@ -937,6 +937,16 @@ export const mockAIChats: AIChat[] = [
       "# Code Review\n\nLet's review your `fetchData` function:\n\n```javascript\nfunction fetchData() {\n  fetch('https://api.example.com/data')\n    .then(response => response.json())\n    .then(data => {\n      console.log(data);\n      return data;\n    })\n    .catch(error => {\n      console.log('Error:', error);\n    });\n}\n```\n\n## Issues and Improvements\n\n### 1. Function doesn't return anything\n\nYour function processes the data but doesn't return the Promise, making it impossible for callers to access the fetched data.\n\n### 2. No error handling for non-2xx responses\n\nThe `fetch` API doesn't reject on HTTP error status codes (like 404 or 500). You need to check `response.ok`.\n\n### 3. Console logs in production code\n\nConsole logs should be removed or replaced with proper logging in production code.\n\n### 4. No loading state indication\n\nThere's no way for users to know when data is being fetched.\n\n## Improved Version\n\n```javascript\nasync function fetchData() {\n  try {\n    const response = await fetch('https://api.example.com/data');\n    \n    if (!response.ok) {\n      throw new Error(`HTTP error! Status: ${response.status}`);\n    }\n    \n    const data = await response.json();\n    return data;\n  } catch (error) {\n    // Consider using a proper error handling strategy instead of console.log\n    console.error('Failed to fetch data:', error);\n    throw error; // Re-throw to allow callers to handle the error\n  }\n}\n\n// Usage example\nasync function handleDataFetching() {\n  try {\n    const data = await fetchData();\n    // Process data here\n  } catch (error) {\n    // Handle error appropriately (e.g., show error message to user)\n  }\n}\n```\n\n## Additional Suggestions\n\n1. **Add timeout handling**:\n   ```javascript\n   const controller = new AbortController();\n   const timeoutId = setTimeout(() => controller.abort(), 5000);\n   \n   try {\n     const response = await fetch('https://api.example.com/data', {\n       signal: controller.signal\n     });\n     // Process response\n   } catch (error) {\n     if (error.name === 'AbortError') {\n       // Handle timeout\n     }\n   } finally {\n     clearTimeout(timeoutId);\n   }\n   ```\n\n2. **Consider using a request library** like axios which handles some of these issues automatically.\n\n3. **Add request parameters** for flexibility:\n   ```javascript\n   async function fetchData(url, options = {}) {\n     // Implementation\n   }\n   ```\n\n4. **Add retry logic** for transient failures.\n\nThese improvements will make your code more robust, maintainable, and user-friendly.",
     type: "code_review",
     createdAt: new Date(Date.now() - 3600000 * 5), // 5 hours ago
+  },
+  {
+    _id: "ai-chat-4",
+    userId: "user-current",
+    question: 
+      "Can you help me with my homework?",
+    answer:
+      "# Go语言实现冒泡排序\n\n冒泡排序是一种简单的排序算法，它重复地遍历要排序的数列，一次比较两个元素，如果它们的顺序错误就把它们交换过来。下面是用Go语言实现的冒泡排序：\n\n```go\npackage main\n\nimport \"fmt\"\n\nfunc bubbleSort(arr []int) {\n    n := len(arr)\n    for i := 0; i < n-1; i++ {\n        // 每次遍历后，最大的元素会\"冒泡\"到最后\n        for j := 0; j < n-i-1; j++ {\n            if arr[j] > arr[j+1] {\n                // 交换相邻元素\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n            }\n        }\n    }\n}\n\nfunc main() {\n    // 测试冒泡排序\n    arr := []int{64, 34, 25, 12, 22, 11, 90}\n    fmt.Println(\"排序前:\", arr)\n    \n    bubbleSort(arr)\n    \n    fmt.Println(\"排序后:\", arr)\n}\n```\n\n## 代码说明\n\n1. `bubbleSort`函数接收一个整数切片作为参数\n2. 外层循环控制排序轮数，共需要n-1轮\n3. 内层循环比较相邻元素，如果前一个比后一个大，则交换它们\n4. 每轮结束后，最大的元素会\"冒泡\"到数组末尾\n5. 时间复杂度：\n   - 最好情况(已排序)：O(n)\n   - 最坏情况(逆序)：O(n²)\n   - 平均情况：O(n²)\n6. 空间复杂度：O(1)，是原地排序算法\n\n## 优化版本\n\n可以添加一个标志位来优化已经有序的情况：\n\n```go\nfunc optimizedBubbleSort(arr []int) {\n    n := len(arr)\n    for i := 0; i < n-1; i++ {\n        swapped := false\n        for j := 0; j < n-i-1; j++ {\n            if arr[j] > arr[j+1] {\n                arr[j], arr[j+1] = arr[j+1], arr[j]\n                swapped = true\n            }\n        }\n        // 如果没有发生交换，说明数组已经有序\n        if !swapped {\n            break\n        }\n    }\n}\n```\n\n这个优化版本在最好情况下(数组已经有序)的时间复杂度可以降到O(n)。",
+    type: "qa",
+    createdAt: new Date(Date.now() - 7200000), // 2 hours ago
   },
 ]
 

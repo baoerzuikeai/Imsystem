@@ -13,3 +13,6 @@ jwt:
 ai:
   apiKey: "your-gemini-api-key"  # Gemini API密钥
   model: "gemini-pro"  # AI模型名称
+
+file:
+  basePath: "./uploads"  # 文件上传路径
