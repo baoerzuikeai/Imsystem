@@ -156,28 +156,19 @@
 
 /* globals.css 或你的主CSS文件 */
 html {
-  overflow: hidden !important; /* 强制隐藏html本身的滚动条 */
+  overflow: hidden !important;
   width: 100%;
-  height: 100%;
+  height: 100% !important; /* 确保html高度是稳定的视口高度 */
   margin: 0;
   padding: 0;
 }
 
 body {
   width: 100%;
-  height: 100%; /* 或者 min-height: 100%; */
+  height: 100% !important; /* 确保body高度也是稳定的视口高度 */
   margin: 0;
   padding: 0;
-  overflow-y: auto !important;   /* body负责垂直滚动 */
-  overflow-x: hidden !important; /* body禁止水平滚动 */
-}
-
-/* 如果你的应用有一个主内容包裹器，例如 <div id="root"> 或 <main> */
-/* 确保它也能正确处理内部滚动 */
-#root { /* 或者你的应用主容器选择器 */
-  width: 100%;
-  height: 100%;
-  /* overflow: hidden; /* 如果不希望#root滚动，而是内部某个子元素滚动 */
-  /* 或者 */
-  /* overflow: auto; /* 如果#root是主要的滚动内容区 */
+  overflow: hidden !important; /* body自身不滚动 */
+  display: flex; /* 或者你应用的主布局方式 */
+  flex-direction: column; /* 假设你的应用是垂直flex布局 */
 }

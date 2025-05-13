@@ -15,9 +15,8 @@ export function SettingsSidebar({ isOpen }: SettingsSidebarProps) {
   const { currentUserDetail,getCurrentUser} = useApi()
   useEffect(() => {
     getCurrentUser()
-  }
-  , [])
-  console.log("currentUserDetail", currentUserDetail)
+    console.log("currentUserDetail", currentUserDetail)
+  }, [])
   if (!isOpen) {
     return null
   }

@@ -2,6 +2,26 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { User,LoginRequestDto,RegisterRequestDto,LoginResponse,RegisterResponse} from "@/types"; 
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
+
+// 定义AI聊天请求体类型 (根据你的示例)
+interface AIChatRequest {
+  history: Array<{ content: string; role: "system" | "user" | "assistant" }>;
+  question: string;
+}
+
+// 定义AI聊天响应体类型 (根据你的示例)
+interface AIChatResponse {
+  answer: Array<{
+    index: number;
+    message: {
+      role: "assistant";
+      content: string;
+    };
+  }>;
+  question: string; // 响应中也包含了问题
+}
+
+// 后端 API 的基础 URL，从 Vite 环境变量中获取
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
 
 // 创建一个 Axios 实例
@@ -131,4 +151,28 @@ export const api = {
   //添加用户相关api
   user: {
   },
+  ai: {
+    /**
+     * 发送聊天消息到 AI 后端
+     * @param payload - 包含历史记录和当前问题的对象
+     * @returns AI 的回复内容
+     */
+    chat: async (payload: AIChatRequest): Promise<AIChatResponse> => {
+      const response = await apiClient.post<AIChatResponse>('/ai/chat', payload);
+      return response.data; // Axios 将响应数据放在 response.data 中
+    },
+    /**
+     * 获取历史AI聊天记录 (如果后端支持此功能)
+     * 假设返回 AIChat 类型的数组
+     * 注意：你的示例请求中没有获取历史记录的端点，这里是假设可能需要
+     */
+    // getChatHistory: async (): Promise<AIChat[]> => {
+    //   // 假设端点是 /ai/history 或类似的
+    //   // const response = await apiClient.get<AIChat[]>('/ai/history');
+    //   // return response.data;
+    //   // 如果没有这个API，可以先返回一个空数组或移除此函数
+    //   console.warn("getChatHistory is not implemented in the backend as per current info.");
+    //   return [];
+    // }
+  }
 };
