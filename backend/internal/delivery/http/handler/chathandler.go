@@ -45,7 +45,7 @@ func (h *ChatHandler) GetPrivateChatByUserID(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未登录"})
 		return
 	}
-    strUserID, ok := userID.(string)
+	strUserID, ok := userID.(string)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "用户ID格式错误"})
 		return
@@ -64,7 +64,7 @@ func (h *ChatHandler) GetGroupChatByUserID(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未登录"})
 		return
 	}
-    strUserID, ok := userID.(string)
+	strUserID, ok := userID.(string)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "用户ID格式错误"})
 		return
@@ -77,4 +77,32 @@ func (h *ChatHandler) GetGroupChatByUserID(c *gin.Context) {
 	c.JSON(http.StatusOK, chats)
 }
 
+func (h *ChatHandler) CreatePrivateChat(c *gin.Context) {
+	userID, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未登录"})
+		return
+	}
+	strUserID, ok := userID.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "用户ID格式错误"})
+		return
+	}
 
+	var request struct {
+		TargetUserID string `json:"targetUserId"` // 目标用户 ID
+	}
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+		return
+	}
+
+	// 创建 Private Chat
+	chat, err := h.chatService.CreatePrivateChat(c.Request.Context(), strUserID, request.TargetUserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, chat)
+}

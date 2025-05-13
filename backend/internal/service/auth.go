@@ -102,3 +102,7 @@ func (s *AuthService) GetUserByID(ctx context.Context, userID string) (*domain.U
 	}
 	return user, nil
 }
+
+func (s *AuthService) SearchUsers(ctx context.Context, keyword string) ([]*domain.User, error) {
+    return s.userRepo.SearchUsers(ctx, keyword)
+}

@@ -90,3 +90,19 @@ func (h *AuthHandler) GetUserDetail(c *gin.Context) {
 	c.JSON(http.StatusOK,user)
 }
 
+
+func (h *AuthHandler) SearchUsers(c *gin.Context) {
+    keyword := c.Query("keyword") // 从查询参数中获取搜索关键字
+    if keyword == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "搜索关键字不能为空"})
+        return
+    }
+
+    users, err := h.authService.SearchUsers(c.Request.Context(), keyword)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, users)
+}

@@ -90,12 +90,15 @@ func main() {
 	{
 
 		protected.GET("/auth/user", authHandler.GetUserDetail)
+		protected.GET("/user/search", authHandler.SearchUsers)
 		protected.GET("/ws", wsHandler.HandleWebSocket)
 		protected.GET("/chats/:chatId/messages", messageHandler.GetChatMessages)
 		protected.GET("/chats/friends", chatHandler.GetPrivateChatFriends)
 		protected.GET("/chats/private", chatHandler.GetPrivateChatByUserID)
+		protected.POST("/chats/private", chatHandler.CreatePrivateChat)
 		protected.GET("/chats/group", chatHandler.GetGroupChatByUserID)
 		protected.POST("/files/upload", fileHandler.UploadFile)
+		//ai聊天
 		protected.POST("/ai/chat", aichatHandler.HandleAIChat)
 	}
 

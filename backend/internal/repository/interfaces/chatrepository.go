@@ -24,4 +24,7 @@ type ChatRepository interface {
 
 	// 根据用户ID和聊天类型查询聊天
 	GetChatsByUserAndType(ctx context.Context, userID string, chatType string) ([]*domain.Chat, error)
+	
+	//添加聊私聊成员
+	CreatePrivateChat(ctx context.Context, chat *domain.Chat) error
 }

@@ -70,3 +70,24 @@ func (r *userRepository) Delete(ctx context.Context, id string) error {
 	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
 	return err
 }
+
+func (r *userRepository) SearchUsers(ctx context.Context, keyword string) ([]*domain.User, error) {
+    filter := bson.M{
+        "$or": []bson.M{
+            {"username": bson.M{"$regex": keyword, "$options": "i"}}, // 搜索用户名（忽略大小写）
+            {"email": bson.M{"$regex": keyword, "$options": "i"}},    // 搜索邮箱（忽略大小写）
+        },
+    }
+
+    cursor, err := r.collection.Find(ctx, filter)
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(ctx)
+
+    var users []*domain.User
+    if err := cursor.All(ctx, &users); err != nil {
+        return nil, err
+    }
+    return users, nil
+}

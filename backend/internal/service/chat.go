@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/baoerzuikeai/Imsystem/internal/domain"
 	"github.com/baoerzuikeai/Imsystem/internal/repository/interfaces"
@@ -13,6 +14,7 @@ type ChatService interface {
 	GetPrivateChatFriends(ctx context.Context, currentUserID string) ([]*domain.User, error)
 	GetPrivateChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
 	GetGroupChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
+	CreatePrivateChat(ctx context.Context, userID1, userID2 string) (*domain.Chat, error)
 }
 
 type chatService struct {
@@ -39,7 +41,8 @@ func (s *chatService) GetPrivateChatFriends(ctx context.Context, currentUserID s
 	friendMap := make(map[string]*domain.User)
 	for _, chat := range chats {
 		// 获取聊天成员
-		users, err := s.chatRepo.GetChatMembers(ctx, chat.ID)
+		strChatId := chat.ID.Hex()
+		users, err := s.chatRepo.GetChatMembers(ctx, strChatId)
 		if err != nil {
 			// 出错可选择忽略该聊天
 			continue
@@ -65,4 +68,27 @@ func (s *chatService) GetPrivateChatByUserID(ctx context.Context, userID string)
 
 func (s *chatService) GetGroupChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error) {
 	return s.chatRepo.GetChatsByUserAndType(ctx, userID, "group")
+}
+
+func (s *chatService) CreatePrivateChat(ctx context.Context, userID1, userID2 string) (*domain.Chat, error) {
+	// 创建聊天对象
+	ObjectUserID1, _ := primitive.ObjectIDFromHex(userID1)
+	ObjectUserID2, _ := primitive.ObjectIDFromHex(userID2)
+	chat := &domain.Chat{
+		ID:   primitive.NewObjectID(),
+		Type: "private",
+		Members: []domain.ChatMember{
+			{UserID: ObjectUserID1, Role: "member", JoinedAt: time.Now()},
+			{UserID: ObjectUserID2, Role: "member", JoinedAt: time.Now()},
+		},
+		CreatedAt: time.Now(),
+		CreatedBy: userID1,
+	}
+
+	// 保存到数据库
+	if err := s.chatRepo.CreatePrivateChat(ctx, chat); err != nil {
+		return nil, err
+	}
+
+	return chat, nil
 }
