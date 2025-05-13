@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MarkdownRenderer } from "@/components/markdown-renderer"
-import { Spinner } from "@/components/ui/spinner" // Assuming you have this or a similar component
 import { Rnd } from "react-rnd"
 import { api } from "@/services/api"; // Import your API service
 import type { AIChat } from "@/types";   // Import AIChat type
@@ -233,8 +232,8 @@ export function AIAssistant() {
     <Rnd
       position={position}
       size={isMinimized ? { width: size.width, height: 60 } : size}
-      onDragStop={(e, d) => { setPosition({ x: d.x, y: d.y }); }}
-      onResizeStop={(e, direction, ref, delta, newPosition) => {
+      onDragStop={(_e, d) => { setPosition({ x: d.x, y: d.y }); }}
+      onResizeStop={(_e, _direction, ref, _delta, newPosition) => {
         setSize({
           width: Number.parseInt(ref.style.width, 10),
           height: Number.parseInt(ref.style.height, 10),
