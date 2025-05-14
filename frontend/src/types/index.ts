@@ -1,5 +1,5 @@
 export interface User {
-  _id: string
+  id: string
   username: string
   email: string
   avatar: string
@@ -113,6 +113,14 @@ export interface LoginResponse {
 }
 
 export interface RegisterResponse {
-  message: string;
-  user: UserInfo;
+  message: string
+  user: UserInfo
+}
+
+export interface SearchedUser extends User {}
+
+export interface CreatePrivateChatResponse {
+  chat:Chat
+  error:string
+  message:string
 }

@@ -104,5 +104,5 @@ func (h *ChatHandler) CreatePrivateChat(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, chat)
+	c.JSON(http.StatusOK, gin.H{"chat": chat, "message": "创建成功"})
 }

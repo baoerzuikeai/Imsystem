@@ -1,5 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse } from "@/types";
+import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse,SearchedUser,CreatePrivateChatResponse } from "@/types";
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
 
@@ -9,6 +9,17 @@ interface AIChatRequest {
   question: string;
 }
 
+// 定义AI聊天响应体类型 (根据你的示例)
+interface AIChatResponse {
+  answer: Array<{
+    index: number;
+    message: {
+      role: "assistant";
+      content: string;
+    };
+  }>;
+  question: string; // 响应中也包含了问题
+}
 
 interface RawFriendData {
   id: string;
@@ -27,17 +38,6 @@ interface RawFriendData {
   updatedAt: string;
 }
 
-// 定义AI聊天响应体类型 (根据你的示例)
-interface AIChatResponse {
-  answer: Array<{
-    index: number;
-    message: {
-      role: "assistant";
-      content: string;
-    };
-  }>;
-  question: string; // 响应中也包含了问题
-}
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
@@ -168,6 +168,37 @@ export const api = {
   },
   //添加用户相关api
   user: {
+     /**
+     * Searches for users based on a query string.
+     * The endpoint is protected.GET("/user/search", authHandler.SearchUsers)
+     * @param query - The search term.
+     * @returns Promise<SearchedUser[]> - An array of user objects matching the search.
+     */
+     searchUsers: async (query: string): Promise<SearchedUser[]> => {
+      try {
+        // Assuming the backend expects the query as a URL parameter, e.g., /user/search?q=john
+        const response = await apiClient.get<SearchedUser[]>(`/user/search?keyword=${encodeURIComponent(query)}`);
+        // Add any necessary transformations here if the API response structure
+        // for searched users differs significantly from the frontend User type.
+        // For now, we assume it's compatible or SearchedUser is a subset/superset of User.
+        return response.data.map(user => ({
+            ...user,
+            // Example transformation if dates are strings and need to be Date objects
+                            // Make sure your User/SearchedUser type expects Date objects for these fields
+                            // if you uncomment and use these transformations.
+                            // If they are already Dates or you handle strings in components, this is not needed.
+                            // createdAt: new Date(user.createdAt),
+                            // updatedAt: new Date(user.updatedAt),
+                            // status: {
+                            //     ...user.status,
+                            //     lastSeen: new Date(user.status.lastSeen),
+                            // },
+        }));
+      } catch (error) {
+        console.error("API Error in searchUsers:", error);
+        throw error;
+      }
+    },
   },
   chat: {
     /**
@@ -179,7 +210,7 @@ export const api = {
       try {
         const response = await apiClient.get<RawFriendData[]>('/chats/friends');
         const transformedFriends: User[] = response.data.map(rawFriend => ({
-          _id: rawFriend.id, // Map 'id' to '_id'
+          id: rawFriend.id, // Map 'id' to '_id'
           username: rawFriend.username,
           email: rawFriend.email,
           avatar: rawFriend.avatar,
@@ -197,6 +228,22 @@ export const api = {
         throw error; // Re-throw to be caught by the caller
       }
     },
+      /**
+     * Creates a new private chat with a target user.
+     * The endpoint is protected.POST("/chats/private", chatHandler.CreatePrivateChat)
+     * The JSON payload is { "targetUserId": "USER_ID" }
+     * @param targetUserId - The ID of the user to start a chat with.
+     * @returns Promise<CreatePrivateChatResponse> - Response from the server.
+     */
+      createPrivateChat: async (targetUserId: string): Promise<CreatePrivateChatResponse> => {
+        try {
+          const response = await apiClient.post<CreatePrivateChatResponse>('/chats/private', { targetUserId });
+          return response.data;
+        } catch (error) {
+          console.error("API Error in createPrivateChat:", error);
+          throw error;
+        }
+      },
   },
   ai: {
     /**
