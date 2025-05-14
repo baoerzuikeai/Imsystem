@@ -1,5 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import type { User,LoginRequestDto,RegisterRequestDto,LoginResponse,RegisterResponse} from "@/types"; 
+import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse } from "@/types";
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
 
@@ -7,6 +7,24 @@ import type { User,LoginRequestDto,RegisterRequestDto,LoginResponse,RegisterResp
 interface AIChatRequest {
   history: Array<{ content: string; role: "system" | "user" | "assistant" }>;
   question: string;
+}
+
+
+interface RawFriendData {
+  id: string;
+  username: string;
+  email: string;
+  avatar: string;
+  status: {
+    online: boolean;
+    lastSeen: string;
+  };
+  profile: {
+    nickname: string;
+    bio: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 // 定义AI聊天响应体类型 (根据你的示例)
@@ -65,8 +83,8 @@ apiClient.interceptors.response.use(
         // 在这里可以触发全局登出逻辑
         // 例如：清除 token 并重定向到登录页
         if (typeof window !== "undefined") {
-            localStorage.removeItem("authToken");
-            // window.location.href = '/login'; // 或者使用 React Router 的 navigate
+          localStorage.removeItem("authToken");
+          // window.location.href = '/login'; // 或者使用 React Router 的 navigate
         }
       }
       return Promise.reject(new Error(errorMessage));
@@ -151,6 +169,35 @@ export const api = {
   //添加用户相关api
   user: {
   },
+  chat: {
+    /**
+     * Fetches the list of friends (private chat contacts) for the current user.
+     * Transforms the raw data from the API to match the frontend User interface.
+     * @returns Promise<User[]> - An array of user objects.
+     */
+    getFriends: async (): Promise<User[]> => {
+      try {
+        const response = await apiClient.get<RawFriendData[]>('/chats/friends');
+        const transformedFriends: User[] = response.data.map(rawFriend => ({
+          _id: rawFriend.id, // Map 'id' to '_id'
+          username: rawFriend.username,
+          email: rawFriend.email,
+          avatar: rawFriend.avatar,
+          status: {
+            online: rawFriend.status.online,
+            lastSeen: new Date(rawFriend.status.lastSeen), // Convert string to Date
+          },
+          profile: rawFriend.profile, // Assuming profile structure matches
+          createdAt: new Date(rawFriend.createdAt), // Convert string to Date
+          updatedAt: new Date(rawFriend.updatedAt), // Convert string to Date
+        }));
+        return transformedFriends;
+      } catch (error) {
+        console.error("API Error in getFriends:", error);
+        throw error; // Re-throw to be caught by the caller
+      }
+    },
+  },
   ai: {
     /**
      * 发送聊天消息到 AI 后端
@@ -175,4 +222,4 @@ export const api = {
     //   return [];
     // }
   }
-};
+}

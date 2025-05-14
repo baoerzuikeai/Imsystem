@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useUserContext } from "@/contexts/user-context"
 import type { User } from "@/types"
+import { useApi } from "@/hooks/use-api"
 
 interface ContactsSidebarProps {
   isOpen: boolean
@@ -15,16 +16,23 @@ interface ContactsSidebarProps {
 }
 
 export function ContactsSidebar({ isOpen, onSelectUser, selectedUser }: ContactsSidebarProps) {
-  const { users, updateUsers } = useUserContext()
+  const{isAuthenticated,contacts,isLoadingContacts,contactsError,fetchContacts} =useApi()
   const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
-    if (isOpen) {
-      updateUsers() // 每次打开 Contacts 时更新用户数据
+    if (isOpen && isAuthenticated) {
+      // Consider if you want to fetch every time it opens, or rely on initial load + manual refresh
+      // fetchContacts(); // Example: uncomment to refresh on open if authenticated
     }
-  }, [isOpen, updateUsers])
+  }, [isOpen, isAuthenticated, fetchContacts]);
 
-  const filteredUsers = users.filter(
+  const handleRefreshContacts = () => {
+    if (isAuthenticated) {
+      fetchContacts();
+    }
+  };
+
+  const filteredUsers = contacts.filter(
     (user) =>
       (user.profile.nickname || user.username).toLowerCase().includes(searchQuery.toLowerCase()),
   )

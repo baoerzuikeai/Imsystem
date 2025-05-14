@@ -1,5 +1,5 @@
 // src/context/api-provider.tsx
-import React, { createContext, useState, useEffect, ReactNode, useMemo } from 'react';
+import React, { createContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { api as backendApiService } from '@/services/api'; // 重命名导入的 api 服务，避免与组件内的 api 变量混淆
 import type { User, LoginRequestDto,UserInfo} from '@/types';
 import { useNavigate } from 'react-router-dom'; // 导入 useNavigate 用于路由跳转
@@ -18,14 +18,24 @@ interface AuthOperations {
   // initializeAuth is internal to the provider for now
 }
 
+// Chat Part
+interface ChatState {
+  contacts: User[];
+  isLoadingContacts: boolean;
+  contactsError: string | null;
+}
+interface ChatOperations {
+  fetchContacts: () => Promise<void>;
+}
+
 export type AuthContextType = AuthState & AuthOperations;
 // --- End of Auth-specific types ---
-
+export type ChatContextType = ChatState & ChatOperations;
 
 // --- Main API Context Type (将来可以聚合其他 context types) ---
 // 目前，ApiContextType 就等同于 AuthContextType
 // 将来: interface ApiContextType { auth: AuthContextType; chat?: ChatContextType; ... }
-export interface ApiContextType extends AuthContextType {}
+export interface ApiContextType extends AuthContextType, ChatContextType {}
 // --- End of Main API Context Type ---
 
 
@@ -44,6 +54,12 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
   const navigate = useNavigate();
+
+  // Chat State
+  const [contacts, setContacts] = useState<User[]>([]);
+  const [isLoadingContacts, setIsLoadingContacts] = useState<boolean>(false);
+  const [contactsError, setContactsError] = useState<string | null>(null);
+
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -90,7 +106,9 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
       setUser(null);
       setCurrentUserDetails(null)
       setIsAuthenticated(false);
+      setContacts([]); 
       console.log('ApiProvider: User logged out');
+      setContactsError(null);
       navigate('/login'); // 登出后跳转到登录页面
     } catch (error) {
       console.error("ApiProvider: Logout failed:", error);
@@ -111,8 +129,33 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
 
 
   // --- Chat State and Logic (示例占位，将来实现) ---
-  // const [messages, setMessages] = useState([]);
-  // const fetchMessages = async (chatId) => { /* ... */ };
+  // Chat Operations
+  const fetchContacts = useCallback(async () => {
+    if (!isAuthenticated) {
+      console.log("User not authenticated. Skipping contact fetch.");
+      setContacts([]); // Ensure contacts are cleared if not authenticated
+      return;
+    }
+    setIsLoadingContacts(true);
+    setContactsError(null);
+    try {
+      const friendsData = await backendApiService.chat.getFriends(); // Returns User[]
+      setContacts(friendsData);
+    } catch (err) {
+      console.error("ApiProvider: Failed to fetch contacts:", err);
+      setContactsError(err instanceof Error ? err.message : "Failed to load contacts.");
+      setContacts([]);
+    } finally {
+      setIsLoadingContacts(false);
+    }
+  }, [isAuthenticated]); // Dependency on isAuthenticated
+
+  // Fetch contacts when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchContacts();
+    }
+  }, [isAuthenticated, fetchContacts]);
   // --- End of Chat State and Logic ---
 
   // 组合 Context value
@@ -127,9 +170,11 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     logout,
     getCurrentUser,
     // Chat part (example)
-    // messages,
-    // fetchMessages,
-  }), [userInfo, currentUserDetail,isAuthenticated, isLoadingAuth/*, messages */]); // 依赖项也需要更新
+    contacts,
+    isLoadingContacts,
+    contactsError,
+    fetchContacts,
+  }), [userInfo, currentUserDetail,isAuthenticated, isLoadingAuth,login, logout,contacts,isLoadingContacts,contactsError,fetchContacts]); // 依赖项也需要更新
 
   return (
     <ApiContext.Provider value={contextValue}>
