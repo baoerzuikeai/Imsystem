@@ -52,13 +52,6 @@ export function ContactsSidebar({ isOpen, onSelectUser, selectedUser }: Contacts
   ? searchedUsers.filter(user => user.id !== currentUserDetail?.id) // Filter out self from search results
   : filteredContacts;
 
-  console.log("Current isAddingMode:", isAddingMode); // <--- 添加这个！
-  console.log("Users to display:", usersToDisplay);
-  console.log("Searched users:", searchedUsers);
-  console.log("Current user detail (currentUserDetail):", currentUserDetail); // 确保打印了正确的变量名
-  console.log("Current user ID from detail:", currentUserDetail?.id, "OR", currentUserDetail?.id); // 打印两种可能的ID
-  console.log("Filtered contacts (filteredContacts):", filteredContacts); // <--- 添加这个！
-
   const isLoadingList = isAddingMode ? isSearchingUsers : isLoadingContacts;
 
   if (!isOpen) {

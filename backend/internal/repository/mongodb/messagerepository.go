@@ -29,7 +29,7 @@ func (r *messageRepository) Create(ctx context.Context, message *domain.Message)
 
 func (r *messageRepository) GetByChatID(ctx context.Context, chatID string, limit, offset int) ([]*domain.Message, error) {
 	opts := options.Find().
-		SetSort(bson.D{{Key: "createdAt", Value: -1}}). // 按时间倒序
+		SetSort(bson.D{{Key: "createdAt", Value: 1}}). // 按时间倒序
 		SetSkip(int64(offset)).
 		SetLimit(int64(limit))
 

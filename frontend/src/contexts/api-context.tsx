@@ -1,8 +1,9 @@
 // src/context/api-provider.tsx
 import React, { createContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { api as backendApiService } from '@/services/api'; // 重命名导入的 api 服务，避免与组件内的 api 变量混淆
-import type { User, LoginRequestDto,UserInfo,SearchedUser,CreatePrivateChatResponse} from '@/types';
+import type { User, LoginRequestDto,UserInfo,SearchedUser,CreatePrivateChatResponse,Chat,Message} from '@/types';
 import { useNavigate } from 'react-router-dom'; // 导入 useNavigate 用于路由跳转
+// Removed incorrect import of Map from 'lucide-react' as it conflicts with JavaScript's native Map.
 // --- Auth-specific types (将来可以拆分到 auth-context.ts) ---
 interface AuthState {
   userInfo: UserInfo | null;
@@ -32,12 +33,26 @@ interface ChatState {
   // For Creating Private Chat (Adding a contact)
   isCreatingChat: boolean;
   createChatError: string | null;
-  lastCreatedChatInfo: CreatePrivateChatResponse | null; // To store info about the last created chat
+  lastCreatedChatInfo: CreatePrivateChatResponse | null; 
+
+  chats: Chat[];
+  isLoadingChats: boolean;
+  chatsError: string | null;
+
+  messages: Message[];
+  isLoadingMessages: boolean;
+  messagesError: string | null;
+  globalmessages: Map<string,Message[]>; // 新增全局消息状态
 }
 interface ChatOperations {
   fetchContacts: () => Promise<void>;
   performUserSearch: (query: string) => Promise<SearchedUser[] | undefined>; // Make it async and return results
   createPrivateChatAndUpdateContacts: (targetUserId: string) => Promise<CreatePrivateChatResponse | undefined>; // Renamed for clarity
+  fetchChats: () => Promise<void>;
+  fetchMessages: (chatId: string) => Promise<void>;
+  fetchMembers: (chatId: string) => Promise<User[]|null>; 
+  addMessageToGlobalCache: (chatId: string, message: Message) => void; // 添加单条消息
+  setChats: React.Dispatch<React.SetStateAction<Chat[]>>; // Expose setChats
 }
 
 export type AuthContextType = AuthState & AuthOperations;
@@ -81,6 +96,16 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
   const [isCreatingChat, setIsCreatingChat] = useState<boolean>(false);
   const [lastCreatedChatInfo, setLastCreatedChatInfo] = useState<CreatePrivateChatResponse | null>(null);
   const [createChatError, setCreateChatError] = useState<string | null>(null);
+
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [isLoadingChats, setIsLoadingChats] = useState(false);
+  const [chatsError, setChatsError] = useState<string | null>(null);
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
+
+  const [globalmessages, setGlobalMessages] = useState<Map<string, Message[]>>(new Map<string, Message[]>()); // 新增全局消息状态
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -245,6 +270,68 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
       setIsCreatingChat(false);
     }
   }, [isAuthenticated, fetchContacts]);
+
+  const fetchChats = useCallback(async () => {
+    setIsLoadingChats(true);
+    setChatsError(null);
+    try {
+      const chatList = await backendApiService.chat.getChats();
+      setChats(chatList);
+    } catch (err) {
+      console.error("ApiProvider: Failed to fetch chats:", err);
+      setChatsError(err instanceof Error ? err.message : "Failed to load chats.");
+    } finally {
+      setIsLoadingChats(false);
+    }
+  }, []);
+
+  const fetchMessages = useCallback(async (chatId: string) => {
+    setIsLoadingMessages(true);
+    setMessagesError(null);
+    try {
+      const messageList = await backendApiService.chat.getMessages(chatId);
+      setGlobalMessages(prevGlobalMessages => {
+        const newGlobalMessages = new Map(prevGlobalMessages); // 创建一个新的 Map 实例以避免直接修改旧状态
+        newGlobalMessages.set(chatId, messageList); // 将获取到的消息列表存入 Map，以 chatId 为键
+        return newGlobalMessages;
+      });
+      setMessages(messageList);
+    } catch (err) {
+      console.error("ApiProvider: Failed to fetch messages:", err);
+      setMessagesError(err instanceof Error ? err.message : "Failed to load messages.");
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  }, []);
+
+  const fetchMembers = useCallback(async (chatId: string) => {
+    try {
+      const members = await backendApiService.chat.getMembers(chatId);
+      return members;
+      console.log("Fetched members:", members);
+    }
+    catch (err) {
+      console.error("ApiProvider: Failed to fetch members:", err);
+      return null;
+    }
+  }, []);
+
+  const addMessageToGlobalCache = useCallback((chatId: string, message: Message) => {
+    setGlobalMessages(prevMap => {
+      const newMap = new Map(prevMap);
+      const existingMessages = newMap.get(chatId) || [];
+      const messageExists = existingMessages.some(msg => msg.id === message.id);
+
+      if (messageExists) {
+        // Update existing message (e.g., status from sending to sent)
+        newMap.set(chatId, existingMessages.map(msg => msg.id === message.id ? { ...msg, ...message } : msg).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+      } else {
+        // Add new message
+        newMap.set(chatId, [...existingMessages, message].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+      }
+      return newMap;
+    });
+  }, []);
   // 组合 Context value
   // 目前只包含 auth 部分，未来可以扩展
   const contextValue = useMemo(() => ({
@@ -268,7 +355,19 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     lastCreatedChatInfo,
     fetchContacts,
     performUserSearch,
-    createPrivateChatAndUpdateContacts
+    createPrivateChatAndUpdateContacts,
+    chats,
+    isLoadingChats,
+    chatsError,
+    messages,
+    isLoadingMessages,
+    messagesError,
+    fetchChats,
+    fetchMessages,
+    fetchMembers,
+    globalmessages,
+    addMessageToGlobalCache,
+    setChats
   }), [userInfo, currentUserDetail,isAuthenticated, isLoadingAuth,login, 
     logout,contacts,isLoadingContacts,contactsError, searchedUsers,
     isSearchingUsers,
@@ -276,7 +375,20 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     isCreatingChat,
     createChatError,
     lastCreatedChatInfo,fetchContacts,performUserSearch,
-    createPrivateChatAndUpdateContacts]); // 依赖项也需要更新
+    createPrivateChatAndUpdateContacts,
+    chats,
+    isLoadingChats,
+    chatsError,
+    messages,
+    isLoadingMessages,
+    messagesError,
+    fetchChats,
+    fetchMessages,
+    fetchMembers,
+    globalmessages,
+    addMessageToGlobalCache,
+    setChats,
+  ]); // 依赖项也需要更新
 
   return (
     <ApiContext.Provider value={contextValue}>

@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Chat, User } from "@/types"
 import { ChatListItem } from "@/components/chat-list-item"
-import { getChatAvatar, getChatTitle } from "@/data/mock-data"
+import { getChatAvatar, getChatTitle } from "@/utils/chat-utils"
+import { useApi } from "@/hooks/use-api"
 
 interface ChatSidebarProps {
   chats: Chat[]
@@ -32,12 +33,12 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
-
+  const currentUserDetail = useApi().currentUserDetail
   // 根据搜索和标签过滤聊天
   const getFilteredChats = () => {
     return chats.filter((chat) => {
       // 首先按搜索词过滤
-      const chatTitle = getChatTitle(chat._id)
+      const chatTitle =currentUserDetail?getChatTitle(chat,currentUserDetail.id,users):"Unknown Chat"
       const matchesSearch = chatTitle.toLowerCase().includes(searchQuery.toLowerCase())
 
       if (!matchesSearch) return false
@@ -62,15 +63,15 @@ export function ChatSidebar({
         <div className="flex flex-col items-center gap-4 mt-4">
           {chats.slice(0, 5).map((chat) => {
             const isGroup = chat.type === "group"
-            const chatTitle = getChatTitle(chat._id)
-            const chatAvatar = getChatAvatar(chat._id)
+            const chatTitle = getChatTitle(chat,chat.id,users)
+            const chatAvatar = getChatAvatar(chat,chat.id,users)
 
             return (
               <Avatar
-                key={chat._id}
+                key={chat.id}
                 className={cn(
                   "cursor-pointer border-2",
-                  activeChat?._id === chat._id ? "border-primary" : "border-transparent",
+                  activeChat?.id === chat.id ? "border-primary" : "border-transparent",
                 )}
                 onClick={() => setActiveChat(chat)}
               >
@@ -104,10 +105,6 @@ export function ChatSidebar({
             <Users className="h-4 w-4" />
             <span className="sr-only">New Group</span>
           </Button>
-          <Button variant="outline" size="icon" className="rounded-full">
-            <Plus className="h-4 w-4" />
-            <span className="sr-only">New Chat</span>
-          </Button>
         </div>
       </div>
 
@@ -139,9 +136,9 @@ export function ChatSidebar({
           {filteredChats.length > 0 ? (
             filteredChats.map((chat) => (
               <ChatListItem
-                key={chat._id}
+                key={chat.id}
                 chat={chat}
-                isActive={activeChat?._id === chat._id}
+                isActive={activeChat?.id === chat.id}
                 onClick={() => setActiveChat(chat)}
                 users={users}
               />

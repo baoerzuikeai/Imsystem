@@ -132,7 +132,7 @@ export function MessageBubble({ message, isCurrentUser, user }: MessageBubblePro
           )}
         >
           <span>{format(new Date(message.createdAt), "h:mm a")}</span>
-          {isCurrentUser && message.readBy.some((read) => read.userId !== message.senderId) && (
+          {isCurrentUser && Array.isArray(message.readBy) && message.readBy.some((read) => read.userId !== message.senderId) && (
             <Check className="h-3 w-3 text-green-500" />
           )}
         </div>

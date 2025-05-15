@@ -9,118 +9,108 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useWebSocketContext } from "@/contexts/websocket-context"
-import type { Chat, User } from "@/types"
+import type { Chat, User,Message } from "@/types"
 import { MessageBubble } from "@/components/message-bubble"
-import { getChatAvatar, getChatTitle, getMessagesByChatId, getUserOnlineStatus } from "@/data/mock-data"
+import {getChatAvatar, getChatTitle,getUserOnlineStatus }from "@/utils/chat-utils"
+import { useApi } from "@/hooks/use-api"
+
 
 interface ChatMainProps {
   chat: Chat | null
-  onSendMessage: (content: string, type: "text" | "file", fileId?: string) => void
   toggleSidebar: () => void
   users: User[]
+  messages: Message[]
   onGroupInfoClick?: () => void
 }
 
-export function ChatMain({ chat, onSendMessage, toggleSidebar, users, onGroupInfoClick }: ChatMainProps) {
+export function ChatMain({ chat,  toggleSidebar, users, messages,onGroupInfoClick }: ChatMainProps) {
   const [messageInput, setMessageInput] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
+  // const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const typingTimeoutRef = useRef<number | null>(null)
+  // const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
 
   // 使用 WebSocket 上下文
-  const { sendTyping, typingUsers } = useWebSocketContext()
+  const { currentUserDetail, addMessageToGlobalCache } = useApi();
+  const { sendMessage: sendWsMessageViaContext} = useWebSocketContext();
 
-  // 获取聊天消息
-  const messages = chat ? getMessagesByChatId(chat._id) : []
-
-  // 处理群聊和单聊的不同逻辑
   const isGroup = chat?.type === "group"
-  const chatTitle = chat ? getChatTitle(chat._id) : ""
-  const chatAvatar = chat ? getChatAvatar(chat._id) : ""
-
+  const chatTitle = currentUserDetail && chat ? getChatTitle(chat, currentUserDetail.id, users) : "Unknown Chat"
+  const chatAvatar = chat ? getChatAvatar(chat, currentUserDetail?.id || "", users) : "/placeholder.svg"
   // 获取群聊成员信息
   const groupMembers =
     isGroup && chat
       ? chat.members
-          .map((member) => users.find((user) => user._id === member.userId))
+          .map((member) => users.find((user) => user.id === member.userId))
           .filter((user): user is User => user !== undefined)
       : []
 
   // 获取在线成员数量
-  const onlineMembers = groupMembers.filter((member) => getUserOnlineStatus(member._id)).length
-
-  // 获取当前聊天中正在输入的用户
-  const chatTypingUsers = chat ? typingUsers[chat._id] || [] : []
-  const typingUserNames = chatTypingUsers
-    .map((userId) => {
-      const user = users.find((u) => u._id === userId)
-      return user ? user.profile.nickname || user.username : ""
-    })
-    .filter(Boolean)
+  const onlineMembers = groupMembers.filter((member) => getUserOnlineStatus(member.id,users)).length
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  }, [messages, chat?.id]);
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setMessageInput(value)
+    const value = e.target.value;
+    setMessageInput(value);
+  };
 
-    // 处理输入状态
-    if (chat) {
-      if (!isTyping && value.length > 0) {
-        setIsTyping(true)
-        sendTyping(chat._id, true)
-      }
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chat || !messageInput.trim() || !currentUserDetail) return;
 
-      // 清除之前的超时
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
+    // Optimistic message creation can still be useful if you want instant UI update
+    // before server confirmation, but actual addition to global cache will be
+    // handled by onNewMessage in ChatLayout when the message is echoed by the server.
+    /*
+    const tempMessageId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const optimisticMessage: Message = {
+      id: tempMessageId,
+      chatId: chat.id,
+      senderId: currentUserDetail.id,
+      type: "text",
+      content: { text: messageInput },
+      readBy: [{ userId: currentUserDetail.id, readAt: new Date() }],
+      createdAt: new Date(),
+    };
+    // addMessageToGlobalCache(chat.id, optimisticMessage); // This would be handled by onNewMessage
+    */
 
-      // 设置新的超时 - 2秒后停止"正在输入"状态
-      typingTimeoutRef.current = window.setTimeout(() => {
-        if (isTyping) {
-          setIsTyping(false)
-          sendTyping(chat._id, false)
-        }
-      }, 2000)
+    // 根据 websocket/message.go 的 WSMessage 结构
+    // 和 client.go 中对 Content 的处理：
+    // - type: 'chat', content: string (the text message)
+    // - type: 'code', content: string (the code), language: string
+    // - type: 'file', content: string (the fileId), fileName: string
+    const wsPayload = { // This now directly matches SendMessagePayload
+      chatId: chat.id,
+      type: 'chat' as 'chat' | 'code' | 'file', // Explicitly type for 'chat' for now
+      content: messageInput, // For 'chat' type, content is the string itself
+      // language: undefined, // For 'code'
+      // fileName: undefined, // For 'file'
+    };
+
+    const success = sendWsMessageViaContext(wsPayload);
+    if (!success) {
+      console.error("ChatMain: Failed to send message via WebSocket.");
+      // Optionally, implement retry or error feedback to the user
+      // You might want to update an optimistic message to 'failed' status
     }
-  }
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!chat || !messageInput.trim()) return
-
-    // 更新本地状态
-    onSendMessage(messageInput, "text")
-
-    // 清空输入框和输入状态
-    setMessageInput("")
-    if (isTyping) {
-      setIsTyping(false)
-      sendTyping(chat._id, false)
-
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-        typingTimeoutRef.current = null
-      }
-    }
-  }
-
+    setMessageInput("");
+    // Removed typing timeout clearing logic
+  };
   // 清理超时
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current)
-      }
-    }
-  }, [])
-
+  
   if (!chat) {
     return (
       <div className="flex-1 flex items-center justify-center bg-muted/20 border-l border-border">
@@ -155,7 +145,7 @@ export function ChatMain({ chat, onSendMessage, toggleSidebar, users, onGroupInf
               </p>
             ) : (
               <p className="text-xs text-green-500">
-                {getUserOnlineStatus(chat.members.find((m) => m.userId !== "user-current")?.userId || "")
+                {getUserOnlineStatus(chat.members.find((m) => m.userId != currentUserDetail?.id)?.userId ?? "", users)
                   ? "Online"
                   : "Offline"}
               </p>
@@ -191,13 +181,13 @@ export function ChatMain({ chat, onSendMessage, toggleSidebar, users, onGroupInf
 
       <div className="flex-1 p-4 overflow-y-auto custom-scrollbar border-left-0">
         <div className="flex flex-col gap-4">
-          {messages.length > 0 ? (
+          {messages?.length > 0 ? (
             messages.map((message) => (
               <MessageBubble
-                key={message._id}
+                key={message.id}
                 message={message}
-                isCurrentUser={message.senderId === "user-current"}
-                user={users.find((u) => u._id === message.senderId)}
+                isCurrentUser={currentUserDetail ? message.senderId === currentUserDetail.id : false}
+                user={users.find((u) => u.id === message.senderId)}
               />
             ))
           ) : (
@@ -209,15 +199,15 @@ export function ChatMain({ chat, onSendMessage, toggleSidebar, users, onGroupInf
         </div>
       </div>
 
-      {typingUserNames.length > 0 && (
+      {/* {typingUserNames.length > 0 && (
         <div className="px-4 py-1 text-xs text-muted-foreground">
           {typingUserNames.length === 1
             ? `${typingUserNames[0]} is typing...`
             : `${typingUserNames.join(", ")} are typing...`}
         </div>
-      )}
+      )} */}
 
-      <form onSubmit={handleSendMessage} className="border-t border-border p-4 flex items-center gap-2 bg-background">
+      <form onSubmit={handleFormSubmit} className="border-t border-border p-4 flex items-center gap-2 bg-background">
         <Button type="button" variant="ghost" size="icon">
           <Smile className="h-5 w-5" />
         </Button>

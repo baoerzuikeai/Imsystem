@@ -31,7 +31,7 @@ export interface ChatMember {
 }
 
 export interface Chat {
-  _id: string
+  id: string
   type: "private" | "group"
   title: string | null
   avatar: string | null
@@ -55,10 +55,10 @@ export interface MessageReadBy {
 }
 
 export interface Message {
-  _id: string
+  id: string
   chatId: string
   senderId: string
-  type: "text" | "file"
+  type: "text" | "file" | "code"
   content: MessageContent
   replyTo?: string
   readBy: MessageReadBy[]

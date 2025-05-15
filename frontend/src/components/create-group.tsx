@@ -23,7 +23,7 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
   // 过滤用户
   const filteredUsers = users.filter(
     (user) =>
-      user._id !== "user-current" &&
+      user.id !== "user-current" &&
       (user.profile.nickname || user.username).toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
@@ -78,11 +78,11 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
               {selectedUsers.length > 0 && (
                 <div className="flex flex-wrap gap-2 p-2">
                   {selectedUsers.map((userId) => {
-                    const user = users.find((u) => u._id === userId)
+                    const user = users.find((u) => u.id === userId)
                     if (!user) return null
 
                     return (
-                      <div key={user._id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
+                      <div key={user.id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
                         <Avatar className="h-6 w-6">
                           <AvatarImage
                             src={user.avatar || "/placeholder.svg"}
@@ -95,7 +95,7 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
                           variant="ghost"
                           size="icon"
                           className="h-4 w-4 ml-1"
-                          onClick={() => toggleUserSelection(user._id)}
+                          onClick={() => toggleUserSelection(user.id)}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -109,9 +109,9 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
 
               {filteredUsers.map((user) => (
                 <div
-                  key={user._id}
+                  key={user.id}
                   className="flex items-center justify-between p-2 hover:bg-accent/50 rounded-md cursor-pointer"
-                  onClick={() => toggleUserSelection(user._id)}
+                  onClick={() => toggleUserSelection(user.id)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar>
@@ -126,7 +126,7 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
                       <p className="text-xs text-muted-foreground">{user.status.online ? "Online" : "Offline"}</p>
                     </div>
                   </div>
-                  <Checkbox checked={selectedUsers.includes(user._id)} />
+                  <Checkbox checked={selectedUsers.includes(user.id)} />
                 </div>
               ))}
             </div>
@@ -155,11 +155,11 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
                 <label className="text-sm font-medium mb-2 block">Group Members</label>
                 <div className="flex flex-wrap gap-2">
                   {selectedUsers.map((userId) => {
-                    const user = users.find((u) => u._id === userId)
+                    const user = users.find((u) => u.id === userId)
                     if (!user) return null
 
                     return (
-                      <div key={user._id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
+                      <div key={user.id} className="flex items-center gap-1 bg-accent rounded-full pl-1 pr-2 py-1">
                         <Avatar className="h-6 w-6">
                           <AvatarImage
                             src={user.avatar || "/placeholder.svg"}

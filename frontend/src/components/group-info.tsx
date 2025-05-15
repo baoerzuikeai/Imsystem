@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import type { Chat, User } from "@/types"
-import { getChatAvatar, getChatTitle, getUserOnlineStatus } from "@/data/mock-data"
+import { getChatAvatar, getChatTitle, getUserOnlineStatus } from "@/utils/chat-utils"
 
 interface GroupInfoProps {
   chat: Chat
@@ -23,16 +23,16 @@ export function GroupInfo({ chat, users, onClose }: GroupInfoProps) {
     return null
   }
 
-  const chatTitle = getChatTitle(chat._id)
-  const chatAvatar = getChatAvatar(chat._id)
+  const chatTitle = getChatTitle(chat,"", [])
+  const chatAvatar = getChatAvatar(chat,"", [])
 
   // 获取群聊成员信息
   const groupMembers = chat.members
-    .map((member) => users.find((user) => user._id === member.userId))
+    .map((member) => users.find((user) => user.id === member.userId))
     .filter((user): user is User => user !== undefined)
 
   // 获取创建者信息
-  const creator = users.find((user) => user._id === chat.createdBy)
+  const creator = users.find((user) => user.id === chat.createdBy)
 
   // 过滤成员
   const filteredMembers = searchQuery
@@ -89,20 +89,20 @@ export function GroupInfo({ chat, users, onClose }: GroupInfoProps) {
       <div className="flex-1 overflow-y-auto custom-scrollbar border-left-0">
         <div className="p-2">
           <h4 className="text-xs font-medium text-muted-foreground px-2 py-1">MEMBERS • {filteredMembers.length}</h4>
-          {filteredMembers.map((member) => (
-            <div key={member._id} className="flex items-center justify-between p-2 hover:bg-accent/50 rounded-md">
+          {filteredMembers.map((user) => (
+            <div key={user.id} className="flex items-center justify-between p-2 hover:bg-accent/50 rounded-md">
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarImage
-                    src={member.avatar || "/placeholder.svg"}
-                    alt={member.profile.nickname || member.username}
+                    src={user.avatar || "/placeholder.svg"}
+                    alt={user.profile.nickname || user.username}
                   />
-                  <AvatarFallback>{(member.profile.nickname || member.username).substring(0, 2)}</AvatarFallback>
+                  <AvatarFallback>{(user.profile.nickname || user.username).substring(0, 2)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium">{member.profile.nickname || member.username}</p>
+                  <p className="text-sm font-medium">{user.profile.nickname || user.username}</p>
                   <p className="text-xs text-muted-foreground">
-                    {getUserOnlineStatus(member._id) ? "Online" : "Offline"}
+                    {getUserOnlineStatus(user.id,users) ? "Online" : "Offline"}
                   </p>
                 </div>
               </div>

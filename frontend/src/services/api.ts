@@ -1,5 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse,SearchedUser,CreatePrivateChatResponse } from "@/types";
+import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse,SearchedUser,CreatePrivateChatResponse,Message,Chat } from "@/types";
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
 
@@ -183,16 +183,6 @@ export const api = {
         // For now, we assume it's compatible or SearchedUser is a subset/superset of User.
         return response.data.map(user => ({
             ...user,
-            // Example transformation if dates are strings and need to be Date objects
-                            // Make sure your User/SearchedUser type expects Date objects for these fields
-                            // if you uncomment and use these transformations.
-                            // If they are already Dates or you handle strings in components, this is not needed.
-                            // createdAt: new Date(user.createdAt),
-                            // updatedAt: new Date(user.updatedAt),
-                            // status: {
-                            //     ...user.status,
-                            //     lastSeen: new Date(user.status.lastSeen),
-                            // },
         }));
       } catch (error) {
         console.error("API Error in searchUsers:", error);
@@ -244,6 +234,35 @@ export const api = {
           throw error;
         }
       },
+      /**
+     * 获取聊天列表
+     * @returns Promise<Chat[]> - 聊天列表
+     */
+    getChats: async (): Promise<Chat[]> => {
+      const response = await apiClient.get<Chat[]>('/chats');
+      return response.data;
+    },
+
+    /**
+     * 获取指定聊天的消息
+     * @param chatId - 聊天 ID
+     * @returns Promise<Message[]> - 消息列表
+     */
+    getMessages: async (chatId: string): Promise<Message[]> => {
+      const response = await apiClient.get<Message[]>(`/chats/${chatId}/messages`);
+      return response.data;
+    },
+      
+
+    /**
+     * 更具chatId获取成员列表
+     * @param chatId - 聊天 ID
+     * @returns Promise<User[]> - 成员列表
+     */
+    getMembers: async (chatId: string): Promise<User[]> => {
+      const response = await apiClient.get<User[]>(`/chats/${chatId}/members`);
+      return response.data;
+    }
   },
   ai: {
     /**

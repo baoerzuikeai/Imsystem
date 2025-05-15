@@ -128,3 +128,24 @@ func (r *chatRepository) CreatePrivateChat(ctx context.Context, chat *domain.Cha
 	_, err := r.collection.InsertOne(ctx, chat)
 	return err
 }
+
+func (r *chatRepository) GetAllChatsByUserID(ctx context.Context, userID string) ([]*domain.Chat, error) {
+	userObjID,_ := primitive.ObjectIDFromHex(userID)
+	filter := bson.M{
+		"members": bson.M{
+			"$elemMatch": bson.M{"userId": userObjID},
+		},
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var chats []*domain.Chat
+	if err := cursor.All(ctx, &chats); err != nil {
+		return nil, err
+	}
+	return chats, nil
+}

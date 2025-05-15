@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { ChatSidebar } from "@/components/chat-sidebar"
 import { ChatMain } from "@/components/chat-main"
 import { NavSidebar } from "@/components/nav-sidebar"
@@ -13,15 +13,15 @@ import { CreateGroup } from "@/components/create-group"
 import { WebSocketProvider } from "@/contexts/websocket-context"
 import { useMobile } from "@/hooks/use-mobile"
 import type { Chat, User, Message } from "@/types"
-import { mockChats, mockUsers, currentUser, getMessagesByChatId } from "@/data/mock-data"
 import { UserProvider } from "@/contexts/user-context"
 import { AIAssistant } from "@/components/ai-assistant"
+import { useApi } from "@/hooks/use-api"
 
 export function ChatLayout() {
+  const { chats, isLoadingChats, fetchChats, messages, fetchMessages,contacts,fetchMembers,addMessageToGlobalCache,currentUserDetail,setChats: globalSetChats, globalmessages} = useApi();
+  const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const isMobile = useMobile()
-  const [chats, setChats] = useState<Chat[]>(mockChats)
-  const [users, setUsers] = useState<User[]>([currentUser, ...mockUsers])
-  const [activeChat, setActiveChat] = useState<Chat | null>(mockChats[0])
+  const [users, setUsers] = useState<User[]|null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const [activeSection, setActiveSection] = useState("chats")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
@@ -32,117 +32,102 @@ export function ChatLayout() {
     setSidebarOpen(!sidebarOpen)
   }
 
+// Effect to handle active chat changes (fetching messages and members)
+useEffect(() => {
+  if (activeChat?.id) {
+    const chatId = activeChat.id;
+    const hasMessagesCached = globalmessages.has(chatId) && (globalmessages.get(chatId)?.length || 0) > 0;
+    if (!hasMessagesCached) { // Or use !hasBeenFetchedOnce if that's your preferred logic
+      console.log(`ChatLayout: Messages for chat ${chatId} not found in cache or empty, fetching...`);
+      fetchMessages(chatId);
+      console.log("messages", messages)
+    } else {
+      console.log(`ChatLayout: Messages for chat ${chatId} found in cache, skipping fetch.`);
+    }
+    fetchMembers(chatId).then((members) => setUsers(members));
+  } else {
+
+    setUsers(null);
+  }
+}, [activeChat, fetchMessages, fetchMembers, globalmessages]);
+  useEffect(() => {
+    if (activeChat?.id) {
+      fetchMessages(activeChat.id);
+      fetchMembers(activeChat.id).then((members) => setUsers(members))
+    }else {
+      setUsers(null);
+    }  
+  }, [activeChat, fetchMessages,fetchMembers]);
+  console.log("globalmessage<acitvechat>",globalmessages.get(activeChat?.id || "") || [])
   // 处理新消息
-  const handleNewMessage = useCallback(
-    (chatId: string, message: Message) => {
-      setChats((prevChats) => {
-        return prevChats.map((chat) => {
-          if (chat._id === chatId) {
-            // 更新聊天的最后消息时间
+   // 处理从 WebSocketProvider 传来的新消息
+   const handleNewWebSocketMessage = useCallback(
+    (newMessage: Message) => {
+      console.log("ChatLayout: Received new message via WebSocket:", newMessage);
+      addMessageToGlobalCache(newMessage.chatId, newMessage);
+
+      // Update chat metadata (lastMessageAt) and re-sort
+      globalSetChats((prevChats: Chat[]) => {
+        const newChats = prevChats.map((chat) => {
+          if (chat.id === newMessage.chatId) {
             const updatedChat = {
               ...chat,
-              lastMessageAt: message.createdAt,
+              lastMessageAt: newMessage.createdAt,
+              // Potentially update lastMessageSnippet or unreadCount here if needed
+              // unreadCount: activeChat?.id === newMessage.chatId ? 0 : (chat.unreadCount || 0) + 1,
+            };
+            if (activeChat?.id === newMessage.chatId) {
+              // If it's the active chat, update its state too
+              setActiveChat(prevActive => prevActive ? {...prevActive, ...updatedChat} : updatedChat);
             }
-
-            // 如果这是当前活跃聊天，也更新 activeChat
-            if (activeChat?._id === chatId) {
-              setActiveChat(updatedChat)
-            }
-
-            return updatedChat
+            return updatedChat;
           }
-          return chat
-        })
-      })
+          return chat;
+        });
+        // Sort chats by the new lastMessageAt time
+        return newChats.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+      });
     },
-    [activeChat],
-  )
+    [activeChat?.id, addMessageToGlobalCache, globalSetChats]
+  );
 
   // 处理用户状态变化
   const handleUserStatusChange = useCallback((userId: string, isOnline: boolean) => {
-    setUsers((prevUsers) => {
-      return prevUsers.map((user) => {
-        if (user._id === userId) {
-          return {
-            ...user,
-            status: {
-              ...user.status,
-              online: isOnline,
-              lastSeen: isOnline ? user.status.lastSeen : new Date(),
-            },
-          }
-        }
-        return user
-      })
-    })
-  }, [])
+    console.log(`ChatLayout: User ${userId} status to ${isOnline ? 'online' : 'offline'}`);
+    setUsers((prevMembers) =>
+      prevMembers?.map((member) =>
+        member.id === userId ? { ...member, status: { ...member.status, online: isOnline, lastSeen: new Date() } } : member
+      ) || null
+    );
+    // Potentially update contacts list in useApi if user status is global
+  }, []);
 
-  // 处理聊天更新
-  const handleChatUpdate = useCallback(
-    (updatedChat: Chat) => {
-      setChats((prevChats) => {
-        return prevChats.map((chat) => {
-          if (chat._id === updatedChat._id) {
-            const mergedChat = { ...chat, ...updatedChat }
 
-            // 如果这是当前活跃聊天，也更新 activeChat
-            if (activeChat?._id === chat._id) {
-              setActiveChat(mergedChat)
-            }
 
-            return mergedChat
-          }
-          return chat
-        })
-      })
-    },
-    [activeChat],
-  )
+  const handleChatUpdate = useCallback((updatedChat: Chat) => {
+    console.log("ChatLayout: Received chat update via WebSocket:", updatedChat);
+    globalSetChats((prevChats: Chat[]) => {
+      const chatExists = prevChats.some(chat => chat.id === updatedChat.id);
+      let newChats;
+      if (chatExists) {
+        newChats = prevChats.map(chat => (chat.id === updatedChat.id ? { ...chat, ...updatedChat } : chat));
+      } else {
+        newChats = [updatedChat, ...prevChats];
+      }
+      if (activeChat?.id === updatedChat.id) {
+        setActiveChat(prevActive => prevActive ? { ...prevActive, ...updatedChat } : updatedChat);
+      }
+      return newChats.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+    });
+  }, [activeChat?.id, globalSetChats]);
 
-  // 发送消息的处理函数
-  const handleSendMessage = (content: string, type: "text" | "file", fileId?: string) => {
-    if (!activeChat) return
+ 
 
-    // 创建新消息对象
-    const newMessage: Message = {
-      _id: `msg-${Date.now()}`,
-      chatId: activeChat._id,
-      senderId: "user-current",
-      type,
-      content: type === "text" ? { text: content } : { file: { fileId: fileId || "", fileName: content } },
-      readBy: [
-        {
-          userId: "user-current",
-          readAt: new Date(),
-        },
-      ],
-      createdAt: new Date(),
-    }
-
-    // 获取当前聊天的所有消息
-    const currentMessages = getMessagesByChatId(activeChat._id)
-
-    // 将新消息添加到全局消息数组中
-    // 注意：在实际应用中，您需要一个更好的方式来管理消息状态
-    // 这里我们假设有一个全局的mockMessages数组可以被修改
-    // 实际上您可能需要使用状态管理库如Redux或Context API
-    ;(window as any).mockMessages = (window as any).mockMessages || []
-    ;(window as any).mockMessages.push(newMessage)
-
-    // 更新聊天的最后消息时间
-    const updatedChat = {
-      ...activeChat,
-      lastMessageAt: new Date(),
-    }
-
-    setChats(chats.map((chat) => (chat._id === activeChat._id ? updatedChat : chat)))
-    setActiveChat(updatedChat)
-  }
 
   const handleCreateGroup = (name: string, participants: string[]) => {
     const newGroupId = `group-${Date.now()}`
     const newGroup: Chat = {
-      _id: newGroupId,
+      id: newGroupId,
       type: "group",
       title: name,
       avatar: "/placeholder.svg?height=40&width=40",
@@ -156,7 +141,6 @@ export function ChatLayout() {
       createdAt: new Date(),
     }
 
-    setChats([newGroup, ...chats])
     setActiveChat(newGroup)
     setShowCreateGroup(false)
   }
@@ -182,21 +166,21 @@ export function ChatLayout() {
               setActiveChat={setActiveChat}
               isOpen={sidebarOpen}
               toggleSidebar={toggleSidebar}
-              users={users}
+              users={contacts}
               onCreateGroup={toggleCreateGroup}
             />
             <ChatMain
               chat={activeChat}
-              onSendMessage={handleSendMessage}
+              messages={globalmessages.get(activeChat?.id || "") || []}
               toggleSidebar={toggleSidebar}
-              users={users}
+              users={users || []}
               onGroupInfoClick={toggleGroupInfo}
             />
             {showGroupInfo && activeChat?.type === "group" && (
-              <GroupInfo chat={activeChat} users={users} onClose={() => setShowGroupInfo(false)} />
+              <GroupInfo chat={activeChat} users={users||[]} onClose={() => setShowGroupInfo(false)} />
             )}
             {showCreateGroup && (
-              <CreateGroup users={users} onClose={() => setShowCreateGroup(false)} onCreateGroup={handleCreateGroup} />
+              <CreateGroup users={contacts} onClose={() => setShowCreateGroup(false)} onCreateGroup={handleCreateGroup} />
             )}
           </>
         )
@@ -214,7 +198,7 @@ export function ChatLayout() {
       case "settings":
         return <SettingsSidebar isOpen={sidebarOpen} />
       case "search":
-        return <SearchSidebar isOpen={sidebarOpen} chats={chats} users={users} />
+        return <SearchSidebar isOpen={sidebarOpen} chats={chats} users={users||[]} />
       default:
         return (
           <>
@@ -224,14 +208,14 @@ export function ChatLayout() {
               setActiveChat={setActiveChat}
               isOpen={sidebarOpen}
               toggleSidebar={toggleSidebar}
-              users={users}
+              users={contacts}
               onCreateGroup={toggleCreateGroup}
             />
             <ChatMain
               chat={activeChat}
-              onSendMessage={handleSendMessage}
+              messages={globalmessages.get(activeChat?.id || "") || []}
               toggleSidebar={toggleSidebar}
-              users={users}
+              users={users || []}
               onGroupInfoClick={toggleGroupInfo}
             />
           </>
@@ -242,8 +226,8 @@ export function ChatLayout() {
   return (
     <UserProvider>
       <WebSocketProvider
-        userId="user-current"
-        onNewMessage={handleNewMessage}
+        userId={currentUserDetail?.id || ""}
+        onNewMessage={handleNewWebSocketMessage}
         onUserStatusChange={handleUserStatusChange}
         onChatUpdate={handleChatUpdate}
       >

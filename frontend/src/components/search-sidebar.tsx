@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Chat, User } from "@/types"
-import { getChatTitle, getLastMessageForChat, getMessagesByChatId } from "@/data/mock-data"
-import { getChatAvatar } from "@/data/mock-data"
+import { getLastMessageForChat, getMessagesByChatId } from "@/data/mock-data"
+
 
 interface SearchSidebarProps {
   isOpen: boolean
@@ -20,13 +20,13 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
 
   const filteredUsers = users.filter(
     (user) =>
-      user._id !== "user-current" &&
+      user.id !== "user-current" &&
       (user.profile.nickname || user.username).toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
   const filteredChats = chats.filter((chat) => {
-    const chatTitle = getChatTitle(chat._id)
-    const messages = getMessagesByChatId(chat._id)
+    const chatTitle = getChatTitle(chat.id)
+    const messages = getMessagesByChatId(chat.id)
 
     return (
       chatTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -79,7 +79,7 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
                   <h3 className="text-xs font-medium text-muted-foreground px-2 py-1">CONTACTS</h3>
                   {filteredUsers.slice(0, 3).map((user) => (
                     <div
-                      key={user._id}
+                      key={user.id}
                       className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                     >
                       <Avatar>
@@ -101,8 +101,8 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
                 <div className="p-2">
                   <h3 className="text-xs font-medium text-muted-foreground px-2 py-1">CHATS</h3>
                   {filteredChats.slice(0, 5).map((chat) => {
-                    const chatTitle = getChatTitle(chat._id)
-                    const lastMessage = getLastMessageForChat(chat._id)
+                    const chatTitle = getChatTitle(chat.id)
+                    const lastMessage = getLastMessageForChat(chat.id)
                     const lastMessageText =
                       lastMessage?.type === "text"
                         ? lastMessage.content.text
@@ -112,12 +112,12 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
 
                     return (
                       <div
-                        key={chat._id}
+                        key={chat.id}
                         className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                       >
                         <Avatar>
                           <AvatarImage
-                            src={chat.type === "group" ? chat.avatar || "/placeholder.svg" : getChatAvatar(chat._id)}
+                            src={chat.type === "group" ? chat.avatar || "/placeholder.svg" : getChatAvatar(chat.id)}
                             alt={chatTitle}
                           />
                           <AvatarFallback>{chatTitle.substring(0, 2)}</AvatarFallback>
@@ -150,8 +150,8 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
             filteredChats.length > 0 ? (
               <div className="flex flex-col p-2">
                 {filteredChats.map((chat) => {
-                  const chatTitle = getChatTitle(chat._id)
-                  const lastMessage = getLastMessageForChat(chat._id)
+                  const chatTitle = getChatTitle(chat.id)
+                  const lastMessage = getLastMessageForChat(chat.id)
                   const lastMessageText =
                     lastMessage?.type === "text"
                       ? lastMessage.content.text
@@ -161,12 +161,12 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
 
                   return (
                     <div
-                      key={chat._id}
+                      key={chat.id}
                       className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                     >
                       <Avatar>
                         <AvatarImage
-                          src={chat.type === "group" ? chat.avatar || "/placeholder.svg" : getChatAvatar(chat._id)}
+                          src={chat.type === "group" ? chat.avatar || "/placeholder.svg" : getChatAvatar(chat.id)}
                           alt={chatTitle}
                         />
                         <AvatarFallback>{chatTitle.substring(0, 2)}</AvatarFallback>
@@ -197,7 +197,7 @@ export function SearchSidebar({ isOpen, chats, users }: SearchSidebarProps) {
               <div className="flex flex-col p-2">
                 {filteredUsers.map((user) => (
                   <div
-                    key={user._id}
+                    key={user.id}
                     className="flex items-center gap-3 p-2 rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
                   >
                     <Avatar>

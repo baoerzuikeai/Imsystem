@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils"
 import type { Chat, User } from "@/types"
 import { formatDistanceToNow } from "date-fns"
 import { Check, Users } from "lucide-react"
-import { getChatAvatar, getChatTitle, getLastMessageForChat, getUnreadCountForChat } from "@/data/mock-data"
-
+import { getLastMessageForChat, getUnreadCountForChat } from "@/data/mock-data"
+import { getChatAvatar, getChatTitle } from "@/utils/chat-utils"
+import { useApi } from "@/hooks/use-api"
 interface ChatListItemProps {
   chat: Chat
   isActive: boolean
@@ -14,11 +15,12 @@ interface ChatListItemProps {
   users: User[]
 }
 
-export function ChatListItem({ chat, isActive, onClick }: ChatListItemProps) {
-  const lastMessage = getLastMessageForChat(chat._id)
-  const unreadCount = getUnreadCountForChat(chat._id)
-  const chatTitle = getChatTitle(chat._id)
-  const chatAvatar = getChatAvatar(chat._id)
+export function ChatListItem({ chat, isActive, onClick,users }: ChatListItemProps) {
+  const {currentUserDetail}= useApi()
+  const lastMessage = getLastMessageForChat(chat.id)
+  const unreadCount = getUnreadCountForChat(chat.id)
+  const chatTitle = currentUserDetail ? getChatTitle(chat, currentUserDetail.id, users) : "Unknown Chat"
+  const chatAvatar = getChatAvatar(chat, currentUserDetail?.id || "", users)
 
   const formattedTime = lastMessage ? formatDistanceToNow(new Date(lastMessage.createdAt), { addSuffix: false }) : ""
 

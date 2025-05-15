@@ -93,10 +93,12 @@ func main() {
 		protected.GET("/user/search", authHandler.SearchUsers)
 		protected.GET("/ws", wsHandler.HandleWebSocket)
 		protected.GET("/chats/:chatId/messages", messageHandler.GetChatMessages)
+		protected.GET("/chats/:chatId/members", chatHandler.GetChatMembers)
 		protected.GET("/chats/friends", chatHandler.GetPrivateChatFriends)
 		protected.GET("/chats/private", chatHandler.GetPrivateChatByUserID)
 		protected.POST("/chats/private", chatHandler.CreatePrivateChat)
 		protected.GET("/chats/group", chatHandler.GetGroupChatByUserID)
+		protected.GET("/chats", chatHandler.GetAllChats)
 		protected.POST("/files/upload", fileHandler.UploadFile)
 		//ai聊天
 		protected.POST("/ai/chat", aichatHandler.HandleAIChat)

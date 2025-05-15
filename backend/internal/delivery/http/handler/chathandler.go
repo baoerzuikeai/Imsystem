@@ -106,3 +106,40 @@ func (h *ChatHandler) CreatePrivateChat(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"chat": chat, "message": "创建成功"})
 }
+
+func (h *ChatHandler) GetAllChats(c *gin.Context) {
+    userID, exists := c.Get("userID")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未登录"})
+        return
+    }
+    strUserID, ok := userID.(string)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "用户ID格式错误"})
+        return
+    }
+
+    chats, err := h.chatService.GetAllChatsByUserID(c.Request.Context(), strUserID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, chats)
+}
+
+func (h *ChatHandler) GetChatMembers(c *gin.Context) {
+    chatID := c.Param("chatId")
+    if chatID == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "chatId 不能为空"})
+        return
+    }
+
+    users, err := h.chatService.GetChatMembers(c.Request.Context(), chatID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, users)
+}

@@ -15,6 +15,8 @@ type ChatService interface {
 	GetPrivateChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
 	GetGroupChatByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
 	CreatePrivateChat(ctx context.Context, userID1, userID2 string) (*domain.Chat, error)
+	GetAllChatsByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
+	GetChatMembers(ctx context.Context, chatID string) ([]*domain.User, error)
 }
 
 type chatService struct {
@@ -91,4 +93,17 @@ func (s *chatService) CreatePrivateChat(ctx context.Context, userID1, userID2 st
 	}
 
 	return chat, nil
+}
+
+func (s *chatService) GetAllChatsByUserID(ctx context.Context, userID string) ([]*domain.Chat, error) {
+    return s.chatRepo.GetAllChatsByUserID(ctx, userID)
+}
+
+func (s *chatService) GetChatMembers(ctx context.Context, chatID string) ([]*domain.User, error) {
+	// 获取聊天成员
+	users, err := s.chatRepo.GetChatMembers(ctx, chatID)
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
