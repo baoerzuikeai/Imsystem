@@ -34,9 +34,11 @@ export function ChatSidebar({
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const currentUserDetail = useApi().currentUserDetail
+
+  const currentChats = chats || [];
   // 根据搜索和标签过滤聊天
   const getFilteredChats = () => {
-    return chats.filter((chat) => {
+    return currentChats.filter((chat) => {
       // 首先按搜索词过滤
       const chatTitle =currentUserDetail?getChatTitle(chat,currentUserDetail.id,users):"Unknown Chat"
       const matchesSearch = chatTitle.toLowerCase().includes(searchQuery.toLowerCase())

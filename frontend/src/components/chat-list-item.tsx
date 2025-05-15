@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils"
 import type { Chat, User } from "@/types"
 import { formatDistanceToNow } from "date-fns"
 import { Check, Users } from "lucide-react"
-import { getLastMessageForChat, getUnreadCountForChat } from "@/data/mock-data"
-import { getChatAvatar, getChatTitle } from "@/utils/chat-utils"
+
+import { getChatAvatar, getChatTitle ,getLastMessageForChat} from "@/utils/chat-utils"
 import { useApi } from "@/hooks/use-api"
 interface ChatListItemProps {
   chat: Chat
@@ -16,9 +16,9 @@ interface ChatListItemProps {
 }
 
 export function ChatListItem({ chat, isActive, onClick,users }: ChatListItemProps) {
-  const {currentUserDetail}= useApi()
-  const lastMessage = getLastMessageForChat(chat.id)
-  const unreadCount = getUnreadCountForChat(chat.id)
+  const {currentUserDetail,globalmessages}= useApi()
+  const lastMessage = getLastMessageForChat(chat.id,globalmessages.get(chat.id) || [])
+ 
   const chatTitle = currentUserDetail ? getChatTitle(chat, currentUserDetail.id, users) : "Unknown Chat"
   const chatAvatar = getChatAvatar(chat, currentUserDetail?.id || "", users)
 
@@ -74,15 +74,15 @@ export function ChatListItem({ chat, isActive, onClick,users }: ChatListItemProp
           <span className="text-xs text-muted-foreground">{formattedTime}</span>
         </div>
         <div className="flex items-center gap-1">
-          {lastMessage && lastMessage.readBy.some((read) => read.userId !== lastMessage.senderId) && (
+          {/* {lastMessage && lastMessage.readBy.some((read) => read.userId !== lastMessage.senderId) && (
             <Check className="h-3 w-3 text-green-500" />
-          )}
+          )} */}
           <p className="text-sm text-muted-foreground truncate">{getLastMessageText()}</p>
-          {unreadCount > 0 && (
+          {/* {unreadCount > 0 && (
             <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
               {unreadCount}
             </span>
-          )}
+          )} */}
         </div>
       </div>
     </div>

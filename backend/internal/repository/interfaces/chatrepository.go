@@ -31,4 +31,5 @@ type ChatRepository interface {
 	//获取chat
 	GetAllChatsByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
 
+	CreateGroupChat(ctx context.Context, chat *domain.Chat) error
 }

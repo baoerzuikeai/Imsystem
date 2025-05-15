@@ -57,7 +57,6 @@ export function MessageBubble({
 
   const fileIdFromMessage =
     message.type === "file" && message.content?.fileId
-  console.log("MessageBubble: fileIdFromMessage", fileIdFromMessage);
   useEffect(() => {
     // Reset state when message (and thus fileId) changes
     setFileDetails(null);
@@ -91,8 +90,6 @@ export function MessageBubble({
       fetchFileDetails();
     }
   }, [fileIdFromMessage]); // Depend on fileIdFromMessage
-
-  console.log("MessageBubble: fileDetails", fileDetails);
   const toggleAudioPlay = () => {
     setIsAudioPlaying(!isAudioPlaying);
     // Actual audio play/pause logic would involve an <audio> element ref and its methods
@@ -109,8 +106,6 @@ export function MessageBubble({
     if (!fileUrl.startsWith("http://") && !fileUrl.startsWith("https://")) {
       completeFileUrl = `${API_DOMAIN}${fileUrl.startsWith("/") ? "" : "/"}${fileUrl}`;
     }
-
-    console.log("Attempting to download from URL:", completeFileUrl);
 
     const link = document.createElement("a");
     link.href = completeFileUrl;

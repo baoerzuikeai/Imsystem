@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { Chat, User } from "@/types"
-import { getLastMessageForChat, getMessagesByChatId } from "@/data/mock-data"
+import { getLastMessageForChat } from "@/utils/chat-utils"
 
 
 interface SearchSidebarProps {

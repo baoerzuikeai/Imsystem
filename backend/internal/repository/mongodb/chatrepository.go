@@ -149,3 +149,9 @@ func (r *chatRepository) GetAllChatsByUserID(ctx context.Context, userID string)
 	}
 	return chats, nil
 }
+
+
+func (r *chatRepository) CreateGroupChat(ctx context.Context, chat *domain.Chat) error {
+    _, err := r.collection.InsertOne(ctx, chat)
+    return err
+}

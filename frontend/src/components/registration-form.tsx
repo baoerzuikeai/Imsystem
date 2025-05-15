@@ -29,7 +29,7 @@ export function RegistrationForm({
     }
 
     try {
-      const response = await axios.post("http://192.168.31.75:8080/api/v1/auth/register", { // 替换为你的注册 API
+      const response = await axios.post("http://localhost:8080/api/v1/auth/register", { // 替换为你的注册 API
         username: username, // 使用 username
         email: email,
         password: password,

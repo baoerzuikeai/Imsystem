@@ -17,7 +17,7 @@ export function NavSidebar({ activeSection, setActiveSection }: NavSidebarProps)
     <div className="w-16 h-full bg-background border-r border-border flex flex-col items-center py-6 shadow-sm">
       <div className="flex flex-col items-center gap-6 flex-1">
         <TooltipProvider>
-          <Tooltip>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
@@ -34,7 +34,7 @@ export function NavSidebar({ activeSection, setActiveSection }: NavSidebarProps)
             <TooltipContent side="right">
               <p>Search</p>
             </TooltipContent>
-          </Tooltip>
+          </Tooltip> */}
 
           <Tooltip>
             <TooltipTrigger asChild>

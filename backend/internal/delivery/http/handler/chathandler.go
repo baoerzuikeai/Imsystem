@@ -143,3 +143,34 @@ func (h *ChatHandler) GetChatMembers(c *gin.Context) {
 
     c.JSON(http.StatusOK, users)
 }
+
+func (h *ChatHandler) CreateGroupChat(c *gin.Context) {
+    userID, exists := c.Get("userID")
+    if !exists {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "用户未登录"})
+        return
+    }
+    strUserID, ok := userID.(string)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "用户ID格式错误"})
+        return
+    }
+
+    var request struct {
+        Title     string   `json:"title"`     // 群聊标题
+        MemberIDs []string `json:"memberIds"` // 成员用户ID列表
+    }
+    if err := c.ShouldBindJSON(&request); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误"})
+        return
+    }
+
+    // 创建群聊
+    chat, err := h.chatService.CreateGroupChat(c.Request.Context(), strUserID, request.Title, request.MemberIDs)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, chat)
+}

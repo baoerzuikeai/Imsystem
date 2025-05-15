@@ -98,6 +98,7 @@ func main() {
 		protected.GET("/chats/private", chatHandler.GetPrivateChatByUserID)
 		protected.POST("/chats/private", chatHandler.CreatePrivateChat)
 		protected.GET("/chats/group", chatHandler.GetGroupChatByUserID)
+		protected.POST("/chats/group", chatHandler.CreateGroupChat)
 		protected.GET("/chats", chatHandler.GetAllChats)
 		protected.POST("/files/upload", fileHandler.UploadFile)
 		protected.GET("/files/:fileId", fileHandler.GetFileByID)

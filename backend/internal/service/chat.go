@@ -17,6 +17,7 @@ type ChatService interface {
 	CreatePrivateChat(ctx context.Context, userID1, userID2 string) (*domain.Chat, error)
 	GetAllChatsByUserID(ctx context.Context, userID string) ([]*domain.Chat, error)
 	GetChatMembers(ctx context.Context, chatID string) ([]*domain.User, error)
+	CreateGroupChat(ctx context.Context, ownerID string, title string,  memberIDs []string) (*domain.Chat, error)
 }
 
 type chatService struct {
@@ -106,4 +107,43 @@ func (s *chatService) GetChatMembers(ctx context.Context, chatID string) ([]*dom
 		return nil, err
 	}
 	return users, nil
+}
+
+func (s *chatService) CreateGroupChat(ctx context.Context, ownerID string, title string,  memberIDs []string) (*domain.Chat, error) {
+    // 构造群聊成员
+	ownerObjID, _ := primitive.ObjectIDFromHex(ownerID)
+    members := []domain.ChatMember{
+        {
+            UserID:   ownerObjID,
+            Role:     "owner",
+            JoinedAt: time.Now(),
+        },
+    }
+
+    for _, memberID := range memberIDs {
+		memberIDObjID, _ := primitive.ObjectIDFromHex(memberID)
+        members = append(members, domain.ChatMember{
+            UserID:   memberIDObjID,
+            Role:     "member",
+            JoinedAt: time.Now(),
+        })
+    }
+
+    // 创建群聊对象
+    chat := &domain.Chat{
+        ID:            primitive.NewObjectID(),
+        Type:          "group",
+        Title:         title,
+        Members:       members,
+        CreatedBy:     ownerID,
+        CreatedAt:     time.Now(),
+        LastMessageAt: time.Now(),
+    }
+
+    // 保存到数据库
+    if err := s.chatRepo.CreateGroupChat(ctx, chat); err != nil {
+        return nil, err
+    }
+
+    return chat, nil
 }

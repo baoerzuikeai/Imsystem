@@ -194,8 +194,8 @@ export function ChatLayout() {
         )
       case "settings":
         return <SettingsSidebar isOpen={sidebarOpen} />
-      case "search":
-        return <SearchSidebar isOpen={sidebarOpen} chats={chats} users={users||[]} />
+      // case "search":
+      //   return <SearchSidebar isOpen={sidebarOpen} chats={chats} users={users||[]} />
       default:
         return (
           <>

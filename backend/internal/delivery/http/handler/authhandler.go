@@ -55,7 +55,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	c.SetCookie("token", token, 3600, "/", "", false, true)
+	c.SetCookie("token", token, 36000, "/", "", false, true)
 	c.JSON(http.StatusOK, dto.AuthResponse{
 		Token: token,
 		User: &dto.UserInfo{
