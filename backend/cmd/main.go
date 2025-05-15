@@ -100,6 +100,7 @@ func main() {
 		protected.GET("/chats/group", chatHandler.GetGroupChatByUserID)
 		protected.GET("/chats", chatHandler.GetAllChats)
 		protected.POST("/files/upload", fileHandler.UploadFile)
+		protected.GET("/files/:fileId", fileHandler.GetFileByID)
 		//ai聊天
 		protected.POST("/ai/chat", aichatHandler.HandleAIChat)
 	}

@@ -34,7 +34,7 @@ export function ChatListItem({ chat, isActive, onClick,users }: ChatListItemProp
     if (lastMessage.type === "text") {
       return lastMessage.content.text || ""
     } else if (lastMessage.type === "file") {
-      return `Sent a file: ${lastMessage.content.file?.fileName || "file"}`
+      return `Sent a file: ${lastMessage.content?.fileName || "file"}`
     }
 
     return ""

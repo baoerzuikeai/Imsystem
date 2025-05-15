@@ -13,7 +13,8 @@ import (
 )
 
 type FileService interface {
-	UploadFile(ctx context.Context, uploaderID ,chatID string, fileHeader *multipart.FileHeader) (*domain.File, error)
+	UploadFile(ctx context.Context, uploaderID, chatID string, fileHeader *multipart.FileHeader) (*domain.File, error)
+	GetFileByID(ctx context.Context, fileID string) (*domain.File, error)
 }
 
 type fileService struct {
@@ -28,7 +29,7 @@ func NewFileService(fileRepo interfaces.FileRepository, basePath string) FileSer
 	}
 }
 
-func (s *fileService) UploadFile(ctx context.Context, uploaderID,chatID string, fileHeader *multipart.FileHeader) (*domain.File, error) {
+func (s *fileService) UploadFile(ctx context.Context, uploaderID, chatID string, fileHeader *multipart.FileHeader) (*domain.File, error) {
 	// 打开上传的文件
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -72,7 +73,7 @@ func (s *fileService) UploadFile(ctx context.Context, uploaderID,chatID string, 
 		Type:       fileHeader.Header.Get("Content-Type"),
 		Size:       fileHeader.Size,
 		URL:        filePath,
-		ChatID:    chatObjID,
+		ChatID:     chatObjID,
 		UploaderID: uploaderObjID,
 		CreatedAt:  time.Now(),
 	}
@@ -82,4 +83,8 @@ func (s *fileService) UploadFile(ctx context.Context, uploaderID,chatID string, 
 	}
 
 	return fileRecord, nil
+}
+
+func (s *fileService) GetFileByID(ctx context.Context, fileID string) (*domain.File, error) {
+	return s.fileRepo.GetByID(ctx, fileID)
 }

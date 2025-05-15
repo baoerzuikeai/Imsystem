@@ -1,5 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse,SearchedUser,CreatePrivateChatResponse,Message,Chat } from "@/types";
+import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse,SearchedUser,CreatePrivateChatResponse,Message,Chat, File } from "@/types";
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
 
@@ -262,6 +262,25 @@ export const api = {
     getMembers: async (chatId: string): Promise<User[]> => {
       const response = await apiClient.get<User[]>(`/chats/${chatId}/members`);
       return response.data;
+    }
+  },
+  file: {
+    /**
+     * 获取指定文件的详细信息
+     * @param fileId - 文件 ID
+     * @returns Promise<FileType> - 文件信息对象
+     */
+    getFileById: async (fileId: string): Promise<File> => { // 返回 FileTypeFromTypes
+      try {
+        const response = await apiClient.get<File>(`/files/${fileId}`);
+
+        const backendFile = response.data;
+        // 转换成前端的 FileTypeFromTypes
+        return backendFile
+      } catch (error) {
+        console.error(`API Error in getFileById for ID ${fileId}:`, error);
+        throw error;
+      }
     }
   },
   ai: {

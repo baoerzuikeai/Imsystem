@@ -43,10 +43,9 @@ export interface Chat {
 
 export interface MessageContent {
   text?: string
-  file?: {
-    fileId: string
-    fileName: string
-  }
+  fileId?: string
+  fileName?: string
+  
 }
 
 export interface MessageReadBy {
@@ -55,6 +54,7 @@ export interface MessageReadBy {
 }
 
 export interface Message {
+  message: any
   id: string
   chatId: string
   senderId: string
@@ -66,7 +66,7 @@ export interface Message {
 }
 
 export interface File {
-  _id: string
+  id: string
   name: string
   type: string
   size: number

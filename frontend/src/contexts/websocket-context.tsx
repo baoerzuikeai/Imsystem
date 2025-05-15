@@ -80,20 +80,23 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
             chatId: data.chatId,
             senderId: data.senderId,
             type: data.type, // domain.MessageType ("text", "code", "file")
-                            // 前端 Message.type 是 "text" | "file". 你需要确保类型对齐
-                            // 如果后端发送 "code", 前端 Message 类型也需要支持 "code"
+
+            // 前端 Message.type 是 "text" | "file". 你需要确保类型对齐
+            // 如果后端发送 "code", 前端 Message 类型也需要支持 "code"
             content: data.content, // domain.MessageContent
-                                 // 前端 MessageContent { text?, file?: { fileId, fileName } }
-                                 // 需要转换
+
+            // 前端 MessageContent { text?, file?: { fileId, fileName } }
+            // 需要转换
             createdAt: new Date(data.createdAt), // 确保是 Date 对象
-            readBy: [], // WebSocket 推送的新消息通常初始时只有发送者已读
+            readBy: [],
+            message: undefined
           };
 
           // 进行 content 结构的转换 (如果需要)
           if (newMessage.type === 'text' && typeof data.content.text !== 'undefined') {
             newMessage.content = { text: data.content.text };
           } else if (newMessage.type === 'file' && data.content.fileId) {
-            newMessage.content = { file: { fileId: data.content.fileId, fileName: data.content.fileName || '' } };
+            newMessage.content = {  fileId: data.content.fileId, fileName: data.content.fileName || '' };
           } else if (newMessage.type === 'code' && data.content.code) {
              // 如果前端 Message 类型要支持 code, 需要添加相应处理
              // newMessage.content = { code: { language: data.content.code.language, codeText: data.content.code.content } };

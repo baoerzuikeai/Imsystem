@@ -56,6 +56,6 @@ func (h *AIChatHandler) HandleAIChat(c *gin.Context) {
 	// 返回 AI 的回答给前端
 	c.JSON(http.StatusOK, gin.H{
 		"question": request.Question,
-		"chioce":   answer,
+		"answer":   answer,
 	})
 }

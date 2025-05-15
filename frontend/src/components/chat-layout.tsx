@@ -32,33 +32,30 @@ export function ChatLayout() {
     setSidebarOpen(!sidebarOpen)
   }
 
-// Effect to handle active chat changes (fetching messages and members)
-useEffect(() => {
-  if (activeChat?.id) {
-    const chatId = activeChat.id;
-    const hasMessagesCached = globalmessages.has(chatId) && (globalmessages.get(chatId)?.length || 0) > 0;
-    if (!hasMessagesCached) { // Or use !hasBeenFetchedOnce if that's your preferred logic
-      console.log(`ChatLayout: Messages for chat ${chatId} not found in cache or empty, fetching...`);
-      fetchMessages(chatId);
-      console.log("messages", messages)
-    } else {
-      console.log(`ChatLayout: Messages for chat ${chatId} found in cache, skipping fetch.`);
+  useEffect(() => {
+    if (currentUserDetail) { // 确保 currentUserDetail 加载后再 fetchChats
+        fetchChats();
     }
-    fetchMembers(chatId).then((members) => setUsers(members));
-  } else {
-
-    setUsers(null);
-  }
-}, [activeChat, fetchMessages, fetchMembers, globalmessages]);
+  }, [fetchChats, currentUserDetail,contacts]);
+  
   useEffect(() => {
     if (activeChat?.id) {
-      fetchMessages(activeChat.id);
+      const existingMessages = globalmessages.get(activeChat.id);
+      // 判断 globalmessages 中是否已有消息
+      if (!existingMessages || existingMessages.length === 0) {
+        console.log(`Fetching messages for chat ${activeChat.id}`);
+        fetchMessages(activeChat.id);
+      } else {
+        console.log(`Messages for chat ${activeChat.id} already exist in globalmessages.`);
+      }
       fetchMembers(activeChat.id).then((members) => setUsers(members))
     }else {
       setUsers(null);
     }  
   }, [activeChat, fetchMessages,fetchMembers]);
-  console.log("globalmessage<acitvechat>",globalmessages.get(activeChat?.id || "") || [])
+  
+  console.log("messages", messages)
+  console.log("globalmessage<acitvech>",globalmessages)
   // 处理新消息
    // 处理从 WebSocketProvider 传来的新消息
    const handleNewWebSocketMessage = useCallback(

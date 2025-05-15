@@ -298,16 +298,39 @@ export function AIAssistant() {
                   <React.Fragment key={chat._id}>
                     {/* User's Question */}
                     <div className="flex justify-end">
-                      <div className="bg-primary text-primary-foreground rounded-lg p-3 break-words max-w-[80%] shadow">
-                        <p>{chat.question}</p>
+                      <div className="bg-card border text-card-foreground rounded-lg p-3 break-words max-w-[80%] shadow">
+                        {(() => {
+                          // 对 chat.question 进行反转义处理
+                          let processedContent = chat.question;
+                          try {
+                            // 尝试将字面上的 \\n, \\t, \\" 等转换回 \n, \t, "
+                            // 注意：JSON.parse 可以很好地处理这些标准的JSON字符串转义
+                            // 为了安全，我们只在它看起来像一个JSON编码过的字符串时（首尾是引号）才尝试
+                            // 但更简单直接的方式是字符串替换
+                            processedContent = processedContent
+                              .replace(/\\n/g, '\n')    // 将 '\\n' 替换为实际换行符
+                              .replace(/\\t/g, '\t')    // 将 '\\t' 替换为实际制表符
+                              .replace(/\\"/g, '"')     // 将 '\\"' 替换为实际引号
+                              .replace(/\\\\/g, '\\');  // 将 '\\\\' 替换为实际反斜杠 (如果需要处理其他转义)
+
+                          } catch (e) {
+                            console.error("Failed to unescape user question, using original:", e);
+                            // 如果解析失败，保持原始内容，虽然不太可能因为我们用的是 replace
+                          }
+
+                          // console.log("User question for MarkdownRenderer (processed):", JSON.stringify(processedContent));
+                          // console.log("User question directly (processed):", processedContent);
+
+                          return <MarkdownRenderer content={processedContent} />;
+                        })()}
                       </div>
                     </div>
                     {/* AI's Answer */}
                     {chat.answer === "..." ? (
                       <div className="flex items-start gap-2 self-start">
                         <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
-                           <AvatarImage src="/ai-avatar.png" alt="AI Assistant" />
-                           <AvatarFallback className="bg-primary text-primary-foreground">AI</AvatarFallback>
+                          <AvatarImage src="/ai-avatar.png" alt="AI Assistant" />
+                          <AvatarFallback className="bg-primary text-primary-foreground">AI</AvatarFallback>
                         </Avatar>
                         <div className="bg-muted rounded-lg p-3">
                           <div className="flex gap-1.5 items-center">
@@ -319,9 +342,9 @@ export function AIAssistant() {
                       </div>
                     ) : chat.answer && (
                       <div className="flex items-start gap-2 self-start">
-                         <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
-                           <AvatarImage src="/ai-avatar.png" alt="AI Assistant" />
-                           <AvatarFallback className="bg-primary text-primary-foreground">AI</AvatarFallback>
+                        <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                          <AvatarImage src="/ai-avatar.png" alt="AI Assistant" />
+                          <AvatarFallback className="bg-primary text-primary-foreground">AI</AvatarFallback>
                         </Avatar>
                         <div className="bg-muted rounded-lg p-3 markdown-content overflow-hidden w-full max-w-[90%] shadow">
                           <MarkdownRenderer content={chat.answer} />
