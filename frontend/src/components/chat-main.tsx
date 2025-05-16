@@ -7,14 +7,20 @@ import { Menu, Video, Phone, MoreHorizontal, Smile, Paperclip, Send, Users, Info
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import EmojiPicker, { EmojiClickData, Theme as EmojiTheme, Categories } from 'emoji-picker-react'; // Import Emoji Picker
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useWebSocketContext } from "@/contexts/websocket-context"
-import type { Chat, User,Message } from "@/types"
+import type { Chat, User, Message } from "@/types"
 import { MessageBubble } from "@/components/message-bubble"
-import {getChatAvatar, getChatTitle,getUserOnlineStatus }from "@/utils/chat-utils"
+import { getChatAvatar, getChatTitle, getUserOnlineStatus } from "@/utils/chat-utils"
 import { useApi } from "@/hooks/use-api"
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover"
 
-
+interface FileUploadResponse {
+  id: string;
+  name: string;
+  // ... other fields from your example response
+}
 interface ChatMainProps {
   chat: Chat | null
   toggleSidebar: () => void
@@ -23,16 +29,19 @@ interface ChatMainProps {
   onGroupInfoClick?: () => void
 }
 
-export function ChatMain({ chat,  toggleSidebar, users, messages,onGroupInfoClick }: ChatMainProps) {
+export function ChatMain({ chat, toggleSidebar, users, messages, onGroupInfoClick }: ChatMainProps) {
   const [messageInput, setMessageInput] = useState("")
   // const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   // const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textInputRef = useRef<HTMLInputElement>(null); // Ref for the text input
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false); // State for Popover
 
 
   // 使用 WebSocket 上下文
   const { currentUserDetail, addMessageToGlobalCache } = useApi();
-  const { sendMessage: sendWsMessageViaContext} = useWebSocketContext();
+  const { sendMessage: sendWsMessageViaContext } = useWebSocketContext();
 
   const isGroup = chat?.type === "group"
   const chatTitle = currentUserDetail && chat ? getChatTitle(chat, currentUserDetail.id, users) : "Unknown Chat"
@@ -41,12 +50,12 @@ export function ChatMain({ chat,  toggleSidebar, users, messages,onGroupInfoClic
   const groupMembers =
     isGroup && chat
       ? chat.members
-          .map((member) => users.find((user) => user.id === member.userId))
-          .filter((user): user is User => user !== undefined)
+        .map((member) => users.find((user) => user.id === member.userId))
+        .filter((user): user is User => user !== undefined)
       : []
 
   // 获取在线成员数量
-  const onlineMembers = groupMembers.filter((member) => getUserOnlineStatus(member.id,users)).length
+  const onlineMembers = groupMembers.filter((member) => getUserOnlineStatus(member.id, users)).length
 
   useEffect(() => {
     scrollToBottom()
@@ -55,7 +64,7 @@ export function ChatMain({ chat,  toggleSidebar, users, messages,onGroupInfoClic
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, chat?.id]);
-  
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
@@ -69,28 +78,6 @@ export function ChatMain({ chat,  toggleSidebar, users, messages,onGroupInfoClic
     e.preventDefault();
     if (!chat || !messageInput.trim() || !currentUserDetail) return;
 
-    // Optimistic message creation can still be useful if you want instant UI update
-    // before server confirmation, but actual addition to global cache will be
-    // handled by onNewMessage in ChatLayout when the message is echoed by the server.
-    /*
-    const tempMessageId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    const optimisticMessage: Message = {
-      id: tempMessageId,
-      chatId: chat.id,
-      senderId: currentUserDetail.id,
-      type: "text",
-      content: { text: messageInput },
-      readBy: [{ userId: currentUserDetail.id, readAt: new Date() }],
-      createdAt: new Date(),
-    };
-    // addMessageToGlobalCache(chat.id, optimisticMessage); // This would be handled by onNewMessage
-    */
-
-    // 根据 websocket/message.go 的 WSMessage 结构
-    // 和 client.go 中对 Content 的处理：
-    // - type: 'chat', content: string (the text message)
-    // - type: 'code', content: string (the code), language: string
-    // - type: 'file', content: string (the fileId), fileName: string
     const wsPayload = { // This now directly matches SendMessagePayload
       chatId: chat.id,
       type: 'chat' as 'chat' | 'code' | 'file', // Explicitly type for 'chat' for now
@@ -108,9 +95,89 @@ export function ChatMain({ chat,  toggleSidebar, users, messages,onGroupInfoClic
 
     setMessageInput("");
     // Removed typing timeout clearing logic
+
+    textInputRef.current?.focus(); // Re-focus after sending
   };
   // 清理超时
-  
+
+  const handlePaperclipClick = () => {
+    fileInputRef.current?.click(); // Trigger click on hidden file input
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !chat || !currentUserDetail) {
+      console.warn("File selection cancelled or missing chat/user details.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    // Retrieve token from localStorage (adjust if your token storage is different)
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.error("Authentication token not found.");
+      // Handle missing token (e.g., redirect to login or show error)
+      return;
+    }
+
+    const uploadUrl = `http://localhost:8080/api/v1/files/upload?chatId=${chat.id}`;
+
+    try {
+      console.log(`Uploading file to: ${uploadUrl}`);
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: {
+          // 'Content-Type' is automatically set by browser for FormData
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to upload file and parse error response." }));
+        throw new Error(errorData.message || `File upload failed with status: ${response.status}`);
+      }
+
+      const uploadedFileData: FileUploadResponse = await response.json();
+      console.log("File uploaded successfully:", uploadedFileData);
+
+      // Now send the file message via WebSocket
+      const wsFilePayload = {
+        chatId: chat.id,
+        type: 'file' as 'file',
+        content: uploadedFileData.id,      // File ID from upload response
+        fileName: uploadedFileData.name, // File name from upload response
+      };
+
+      const success = sendWsMessageViaContext(wsFilePayload);
+      if (!success) {
+        console.error("ChatMain: Failed to send file message via WebSocket.");
+        // Optionally, handle this error (e.g., notify user)
+      } else {
+        console.log("File message sent via WebSocket:", wsFilePayload);
+      }
+
+    } catch (error) {
+      console.error("Error during file upload or sending WebSocket message:", error);
+      // Notify user about the error (e.g., using a toast notification)
+      alert(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      // Reset file input to allow selecting the same file again if needed
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    // For simplicity, we append. For inserting at cursor, more complex logic is needed.
+    setMessageInput(prevInput => prevInput + emojiData.emoji);
+    setIsEmojiPickerOpen(false); // Close the picker after selection
+    textInputRef.current?.focus(); // Re-focus the text input
+  };
+
   if (!chat) {
     return (
       <div className="flex-1 flex items-center justify-center bg-muted/20 border-l border-border">
@@ -208,10 +275,39 @@ export function ChatMain({ chat,  toggleSidebar, users, messages,onGroupInfoClic
       )} */}
 
       <form onSubmit={handleFormSubmit} className="border-t border-border p-4 flex items-center gap-2 bg-background">
-        <Button type="button" variant="ghost" size="icon">
-          <Smile className="h-5 w-5" />
-        </Button>
-        <Button type="button" variant="ghost" size="icon">
+      <Popover open={isEmojiPickerOpen} onOpenChange={setIsEmojiPickerOpen}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="ghost" size="icon">
+              <Smile className="h-5 w-5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="p-0 w-auto border-0" 
+            side="top" // Position the popover above the trigger
+            align="start" // Align to the start of the trigger
+            sideOffset={5} // Optional: add some space
+          >
+            <EmojiPicker
+              onEmojiClick={onEmojiClick}
+              autoFocusSearch={false}
+              theme={EmojiTheme.AUTO} // Or EmojiTheme.LIGHT / EmojiTheme.DARK
+              lazyLoadEmojis={true}
+              // height={350} // Adjust height if needed
+              // width="100%" // Can set a specific width or let it be auto
+              // previewConfig={{ showPreview: false }} // Example: hide preview
+            />
+          </PopoverContent>
+        </Popover>
+        {/* Hidden file input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+        // You can add an 'accept' attribute to filter file types
+        // accept="image/*,video/*,.pdf,.doc,.docx,.txt" 
+        />
+        <Button type="button" variant="ghost" size="icon" onClick={handlePaperclipClick}>
           <Paperclip className="h-5 w-5" />
         </Button>
         <Input placeholder="Enter message..." value={messageInput} onChange={handleInputChange} className="flex-1" />

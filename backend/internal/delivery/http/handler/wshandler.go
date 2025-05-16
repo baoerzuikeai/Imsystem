@@ -6,6 +6,7 @@ import (
 
 	ws "github.com/baoerzuikeai/Imsystem/internal/websocket"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -41,8 +42,10 @@ func (h *Handler) HandleWebSocket(c *gin.Context) {
 		return
 	}
 
+	connectionID := uuid.New().String()
+
 	client := &ws.Client{
-		ID:      userID,
+		ID:      connectionID,
 		UserID:  userID,
 		Socket:  conn,
 		Send:    make(chan []byte, 256),
