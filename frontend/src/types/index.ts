@@ -124,3 +124,14 @@ export interface CreatePrivateChatResponse {
   error:string
   message:string
 }
+
+export interface CreateGroupResponse{
+  chat: Chat
+  error?: string
+  message: string
+}
+
+export interface CreateGroupRequestDto{
+  title: string
+  memberIds: string[]
+}

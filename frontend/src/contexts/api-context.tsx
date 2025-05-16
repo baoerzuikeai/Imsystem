@@ -1,7 +1,9 @@
 // src/context/api-provider.tsx
 import React, { createContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { api as backendApiService } from '@/services/api'; // 重命名导入的 api 服务，避免与组件内的 api 变量混淆
-import type { User, LoginRequestDto,UserInfo,SearchedUser,CreatePrivateChatResponse,Chat,Message} from '@/types';
+import type { User, LoginRequestDto,UserInfo,SearchedUser,CreatePrivateChatResponse,Chat,Message,CreateGroupResponse
+  ,CreateGroupRequestDto
+} from '@/types';
 import { useNavigate } from 'react-router-dom'; // 导入 useNavigate 用于路由跳转
 // Removed incorrect import of Map from 'lucide-react' as it conflicts with JavaScript's native Map.
 // --- Auth-specific types (将来可以拆分到 auth-context.ts) ---
@@ -43,6 +45,10 @@ interface ChatState {
   isLoadingMessages: boolean;
   messagesError: string | null;
   globalmessages: Map<string,Message[]>; // 新增全局消息状态
+
+   isCreatingGroupChat: boolean;
+  createGroupChatError: string | null;
+  lastCreatedGroupChatInfo: CreateGroupResponse | null; // Use the new response type
 }
 interface ChatOperations {
   fetchContacts: () => Promise<void>;
@@ -53,6 +59,7 @@ interface ChatOperations {
   fetchMembers: (chatId: string) => Promise<User[]|null>; 
   addMessageToGlobalCache: (chatId: string, message: Message) => void; // 添加单条消息
   setChats: React.Dispatch<React.SetStateAction<Chat[]>>; // Expose setChats
+  performCreateGroupChat: (groupData: CreateGroupRequestDto) => Promise<CreateGroupResponse | undefined>;
 }
 
 export type AuthContextType = AuthState & AuthOperations;
@@ -107,6 +114,10 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
 
   const [globalmessages, setGlobalMessages] = useState<Map<string, Message[]>>(new Map<string, Message[]>()); // 新增全局消息状态
 
+  const [isCreatingGroupChat, setIsCreatingGroupChat] = useState<boolean>(false);
+  const [createGroupChatError, setCreateGroupChatError] = useState<string | null>(null);
+  const [lastCreatedGroupChatInfo, setLastCreatedGroupChatInfo] = useState<CreateGroupResponse| null>(null);
+  
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoadingAuth(true);
@@ -332,6 +343,31 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
       return newMap;
     });
   }, []);
+
+  const performCreateGroupChat = useCallback(async (groupData: CreateGroupRequestDto): Promise<CreateGroupResponse | undefined> => {
+    if (!isAuthenticated) {
+      setCreateGroupChatError("User not authenticated.");
+      return undefined;
+    }
+    setIsCreatingGroupChat(true);
+    setCreateGroupChatError(null);
+    setLastCreatedGroupChatInfo(null);
+    try {
+      const groupChatResponse = await backendApiService.chat.createGroupChat(groupData);
+      setLastCreatedGroupChatInfo(groupChatResponse);
+      console.log("ApiProvider: Group chat created successfully", groupChatResponse);
+      // After creating a group, you should refresh the chat list
+      await fetchChats(); // Assuming fetchChats will update the `chats` state
+      return groupChatResponse;
+    } catch (err) {
+      console.error("ApiProvider: Failed to create group chat:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to create group chat.";
+      setCreateGroupChatError(errorMessage);
+      return undefined;
+    } finally {
+      setIsCreatingGroupChat(false);
+    }
+  }, [isAuthenticated, fetchChats]); // Add fetchChats to dependencies
   // 组合 Context value
   // 目前只包含 auth 部分，未来可以扩展
   const contextValue = useMemo(() => ({
@@ -367,7 +403,11 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     fetchMembers,
     globalmessages,
     addMessageToGlobalCache,
-    setChats
+    setChats,
+    isCreatingGroupChat,
+    createGroupChatError,
+    lastCreatedGroupChatInfo,
+    performCreateGroupChat,
   }), [userInfo, currentUserDetail,isAuthenticated, isLoadingAuth,login, 
     logout,contacts,isLoadingContacts,contactsError, searchedUsers,
     isSearchingUsers,
@@ -388,6 +428,10 @@ export const ApiProvider: React.FC<ApiProviderProps> = ({ children }) => {
     globalmessages,
     addMessageToGlobalCache,
     setChats,
+    isCreatingGroupChat,
+    createGroupChatError,
+    lastCreatedGroupChatInfo,
+    performCreateGroupChat,
   ]); // 依赖项也需要更新
 
   return (

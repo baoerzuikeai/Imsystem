@@ -1,5 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, RegisterResponse,SearchedUser,CreatePrivateChatResponse,Message,Chat, File } from "@/types";
+import type { User, LoginRequestDto, RegisterRequestDto, LoginResponse, 
+  RegisterResponse,SearchedUser,CreatePrivateChatResponse,Message,Chat, 
+  File,CreateGroupRequestDto,CreateGroupResponse } from "@/types";
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
 
@@ -37,6 +39,8 @@ interface RawFriendData {
   createdAt: string;
   updatedAt: string;
 }
+
+
 
 
 // 后端 API 的基础 URL，从 Vite 环境变量中获取
@@ -262,6 +266,25 @@ export const api = {
     getMembers: async (chatId: string): Promise<User[]> => {
       const response = await apiClient.get<User[]>(`/chats/${chatId}/members`);
       return response.data;
+    },
+
+    /**
+     * Creates a new group chat.
+     * The endpoint is POST /api/v1/chats/group
+     * The JSON payload is { "title": "string", "memberIds": ["string"] }
+     * @param groupData - Object containing title and memberIds.
+     * @returns Promise<CreateGroupResponse> - Response from the server, likely the new chat object.
+     */
+    createGroupChat: async (groupData: CreateGroupRequestDto|null): Promise<CreateGroupResponse> => {
+      try {
+        const response = await apiClient.post<CreateGroupResponse>('/chats/group', groupData);
+        return response.data;
+      } catch (error) {
+        console.error("API Error in createGroupChat:", error);
+        throw error;
+  
+      }
+      
     }
   },
   file: {

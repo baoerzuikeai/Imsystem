@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { User } from "@/types"
+import { useApi } from "@/hooks/use-api"
 
 interface CreateGroupProps {
   users: User[]
@@ -19,11 +20,11 @@ export function CreateGroup({ users, onClose, onCreateGroup }: CreateGroupProps)
   const [groupName, setGroupName] = useState("")
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [step, setStep] = useState<"select" | "name">("select")
-
+  const {currentUserDetail} = useApi()
   // 过滤用户
   const filteredUsers = users.filter(
     (user) =>
-      user.id !== "user-current" &&
+      user.id !== currentUserDetail?.id &&
       (user.profile.nickname || user.username).toLowerCase().includes(searchQuery.toLowerCase()),
   )
 

@@ -8,17 +8,30 @@ import { ContactsSidebar } from "@/components/contacts-sidebar"
 import { ContactDetails } from "@/components/contact-details"
 import { SettingsSidebar } from "@/components/settings-sidebar"
 import { SearchSidebar } from "@/components/search-sidebar"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react"; // 仅导入成功图标
 import { GroupInfo } from "@/components/group-info"
 import { CreateGroup } from "@/components/create-group"
 import { WebSocketProvider } from "@/contexts/websocket-context"
 import { useMobile } from "@/hooks/use-mobile"
-import type { Chat, User, Message } from "@/types"
+import type { Chat, User, Message,CreateGroupRequestDto} from "@/types"
 import { UserProvider } from "@/contexts/user-context"
 import { AIAssistant } from "@/components/ai-assistant"
 import { useApi } from "@/hooks/use-api"
 
 export function ChatLayout() {
-  const { chats, isLoadingChats, fetchChats, messages, fetchMessages,contacts,fetchMembers,addMessageToGlobalCache,currentUserDetail,setChats: globalSetChats, globalmessages} = useApi();
+  const { chats, fetchChats, messages, fetchMessages,contacts,
+    fetchMembers,addMessageToGlobalCache,currentUserDetail,setChats: globalSetChats, 
+    globalmessages, performCreateGroupChat
+  } = useApi();
   const [activeChat, setActiveChat] = useState<Chat | null>(null);
   const isMobile = useMobile()
   const [users, setUsers] = useState<User[]|null>(null)
@@ -27,6 +40,9 @@ export function ChatLayout() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showGroupInfo, setShowGroupInfo] = useState(false)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
+
+  const [showGroupSuccessAlert, setShowGroupSuccessAlert] = useState(false);
+  const [successAlertMessage, setSuccessAlertMessage] = useState("");
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -120,27 +136,64 @@ export function ChatLayout() {
 
  
 
-
-  const handleCreateGroup = (name: string, participants: string[]) => {
-    const newGroupId = `group-${Date.now()}`
-    const newGroup: Chat = {
-      id: newGroupId,
-      type: "group",
-      title: name,
-      avatar: "/placeholder.svg?height=40&width=40",
-      members: participants.map((userId) => ({
-        userId,
-        role: userId === "user-current" ? "owner" : "member",
-        joinedAt: new Date(),
-      })),
-      lastMessageAt: new Date(),
-      createdBy: "user-current",
-      createdAt: new Date(),
+  const handleCreateGroup = async (name: string, participantIdsFromComponent: string[]) => {
+    if (!currentUserDetail) {
+      console.error("Current user not loaded, cannot create group.");
+      // 可以选择在这里弹出一个错误提示，但按照您的要求，我们仅关注成功提示
+      return;
     }
 
-    setActiveChat(newGroup)
-    setShowCreateGroup(false)
-  }
+    const processedMemberIds = participantIdsFromComponent.map(id =>
+      id === "user-current" ? currentUserDetail.id : id
+    );
+    const uniqueMemberIds = Array.from(new Set(processedMemberIds));
+
+    if (name.trim() === "") {
+      console.error("Group name cannot be empty.");
+      return;
+    }
+    if (uniqueMemberIds.length < 1) {
+      console.error("A group needs at least one member.");
+      return;
+    }
+
+    const groupData:CreateGroupRequestDto = {
+      title: name,
+      memberIds: uniqueMemberIds,
+    };
+
+
+    setShowCreateGroup(false); // 先关闭创建表单
+
+    try {
+      const newGroupChat = await performCreateGroupChat(groupData); // performCreateGroupChat 来自 useApi()
+      console.log("Creating group with data:", groupData);
+      if (newGroupChat?.chat) {
+        console.log("Group created successfully in ChatLayout:", newGroupChat);
+        // 设置成功提示信息并显示提示框
+        setSuccessAlertMessage(`Successfully created group "${newGroupChat.chat.title || name}"!`);
+        setShowGroupSuccessAlert(true);
+
+        // fetchChats() 应该在 performCreateGroupChat 内部或其上下文中被调用以更新列表
+        // 可选：将新创建的群聊设置为当前活动聊天
+        setActiveChat(newGroupChat.chat); // 假设 newGroupChat 是完整的 Chat 对象
+
+      } else {
+        // API 调用可能成功但没有返回预期的群聊对象，或者 performCreateGroupChat 内部处理了错误但返回了 undefined
+        console.error("Failed to create group in ChatLayout: No group data returned from performCreateGroupChat.",newGroupChat);
+        // 此处不弹错误提示，按您的要求只关注成功
+      }
+    } catch (error) {
+      // performCreateGroupChat 抛出了错误
+      console.error("Error explicitly caught while creating group in ChatLayout:", error);
+      // 此处不弹错误提示，按您的要求只关注成功
+    }
+  };
+
+  const closeGroupSuccessAlert = () => {
+    setShowGroupSuccessAlert(false);
+    setSuccessAlertMessage(""); // 清空消息，以便下次使用
+  };
 
   const toggleGroupInfo = () => {
     if (activeChat?.type === "group") {
@@ -235,6 +288,22 @@ export function ChatLayout() {
           </div>
           <AIAssistant />
         </div>
+        <AlertDialog open={showGroupSuccessAlert} onOpenChange={setShowGroupSuccessAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                Success
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {successAlertMessage}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <Button onClick={closeGroupSuccessAlert}>OK</Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </WebSocketProvider>
     </UserProvider>
   )
